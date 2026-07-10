@@ -200,6 +200,24 @@ def test_accepted_tag_shown_read_only_when_already_in_ignore_file(tmp_path):
     assert "Accept Risk" not in html_output
 
 
+def test_severity_tab_shows_attack_summary_when_present():
+    report = _sample_report(1)
+    report["dependencies"][0]["cvss"] = {
+        "score": 5.6, "cve_id": "CVE-2020-7598", "severity_label": None, "fixed_version": "1.2.6",
+        "summary": "Prototype pollution allows an attacker to modify Object.prototype via a crafted payload.",
+    }
+    html_output = render_html_report(report, ignore_file=_NO_IGNORE_FILE)
+
+    assert "How this could be exploited:" in html_output
+    assert "modify Object.prototype" in html_output
+
+
+def test_severity_tab_omits_attack_summary_line_when_absent():
+    report = _sample_report(1)  # default cvss dict has no "summary" key at all
+    html_output = render_html_report(report, ignore_file=_NO_IGNORE_FILE)
+    assert "How this could be exploited:" not in html_output
+
+
 def test_cvss_tab_shows_epss_and_kev_when_present():
     report = _sample_report(1)
     report["dependencies"][0]["cvss"] = {

@@ -251,7 +251,7 @@ cli.py                            scan / check / accept commands (argparse)
       "package": "xml2js",
       "version": "0.4.19",
       "lookup_status": "ok",              // "ok" | "no_cve" | "lookup_failed"
-      "cvss": {"score": 9.8, "cve_id": "GHSA-776f-qq4e-3rc3", "source": "cache", "fixed_version": "0.5.0", "severity_label": null},
+      "cvss": {"score": 9.8, "cve_id": "GHSA-776f-qq4e-3rc3", "source": "cache", "fixed_version": "0.5.0", "severity_label": null, "summary": "Prototype pollution in xml2js allows attacker-controlled XML input to modify Object.prototype, potentially leading to denial of service or property injection in the host application."},
       "exploit_intel": {"status": "not_applicable", "epss_score": null, "epss_percentile": null, "in_kev": false, "kev_date_added": null, "source": null},
       "behavioral": {"release_frequency_deviation": 0.29, "maintainer_count": 2, "version_jump_irregularity": 0.45, "download_age_ratio": 3565.1, "status": "ok"},
       "risk_score": 0.995,
@@ -282,6 +282,12 @@ error; never blocks the scan). `epss_score` is FIRST.org's predicted probability
 if the CVE is confirmed on CISA's Known Exploited Vulnerabilities catalog - real,
 observed exploitation, not a prediction.
 
+`cvss.summary` is the advisory's own plain-language description of the
+vulnerability - what an attacker actually gets from it (e.g. "allows an attacker
+to modify Object.prototype via a crafted `__proto__` payload"), not just a
+number. It's pulled straight from GitHub Advisory Database / the curated fixture
+and is `null` when no advisory record exists.
+
 ## The HTML report
 
 A single self-contained `.html` file with a minimal light/dark UI (follows your
@@ -308,8 +314,10 @@ via `localStorage`). Layout:
     measures potential impact if exploited, not whether anyone actually is
     exploiting it - this is the piece that closes that gap.
   - **Severity** - base severity vs. final severity and *why* (CVSS analysis,
-    whether a behavioral anomaly escalated it and by how much), plus the SHAP
-    explanation of what drove the Random Forest's risk score.
+    whether a behavioral anomaly escalated it and by how much), a plain-language
+    description of what an attacker could actually do with it (pulled straight
+    from the advisory's own summary, when the advisory record has one), and the
+    SHAP explanation of what drove the Random Forest's risk score.
   - **Behavioral** - the 4 raw behavioral features, the anomaly flag, and the
     SHAP explanation of *why* the Isolation Forest did or didn't consider this
     pattern suspicious (e.g. a single maintainer plus an irregular version jump).

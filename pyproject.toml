@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "securechain"
+version = "0.1.0"
+description = "CLI dependency risk scanner with ML-based contextual risk scoring and SHAP explainability"
+requires-python = ">=3.9"
+readme = "README.md"
+dependencies = [
+    "requests>=2.31",
+    "scikit-learn>=1.3",
+    "shap>=0.44",
+    "joblib>=1.3",
+    "packaging>=23.0",
+    "numpy>=1.24",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+]
+
+[project.scripts]
+securechain = "securechain.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["securechain*"]
+
+[tool.setuptools.package-data]
+securechain = []

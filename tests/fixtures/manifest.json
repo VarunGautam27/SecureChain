@@ -1,0 +1,22 @@
+{
+  "name": "securechain-test-fixture",
+  "version": "1.0.0",
+  "description": "A private, test-owned copy of the original 15-dependency vulnerable manifest, used only by the automated test suite. This is intentionally separate from demo/package.json, which is meant to be edited by hand as a manual exercise (see README) - tests must never depend on a file the user is expected to mutate.",
+  "dependencies": {
+    "lodash": "4.17.21",
+    "chalk": "5.3.0",
+    "uuid": "9.0.1",
+    "debug": "4.3.4",
+    "semver": "7.5.4",
+    "commander": "11.1.0",
+    "dotenv": "16.3.1",
+    "yargs": "17.7.2",
+    "picocolors": "1.0.0",
+    "colors": "1.4.1",
+    "minimist": "1.2.0",
+    "axios": "1.5.0",
+    "moment": "2.29.1",
+    "xml2js": "0.4.19",
+    "node-ipc": "9.2.1"
+  }
+}

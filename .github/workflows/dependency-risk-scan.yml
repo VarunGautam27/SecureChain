@@ -1,0 +1,124 @@
+name: Dependency Risk Scan
+
+# Gating is purely exit-code based: `securechain check` exits non-zero when an
+# unaccepted dependency above --max-severity is found, zero otherwise. That
+# means this same logic works identically in any CI platform that can run a
+# shell command and inspect its exit code (Jenkins, GitLab CI, CircleCI, ...) -
+# nothing here is GitHub Actions-specific beyond the YAML syntax itself.
+#
+# Default policy is --max-severity safe: only genuinely Safe dependencies pass
+# freely. A risk is a risk regardless of tier - Low, Medium, High, and
+# Critical all block the build unless a dependency is explicitly recorded in
+# .riskignore.json.
+#
+# This workflow scans the two fixed demo manifests (package.vulnerable.json /
+# package.fixed.json) to demonstrate the gate end to end. demo/package.json is
+# a separate, single manifest meant to be edited by hand as a manual exercise
+# (see README) - it is deliberately not wired into this workflow, so nothing
+# here depends on whatever state you've left it in.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  # 1. package.fixed.json has every dependency that has a real upstream fix
+  #    upgraded to it. colors has no possible fix (a behavioral-only flag, no
+  #    CVE) and is instead covered by the accepted exception already committed
+  #    in .riskignore.json. Result: the gate passes with one warning logged,
+  #    and this job is expected to stay green.
+  scan-fixed-manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -e .
+      - name: Scan demo/package.fixed.json
+        run: |
+          securechain scan demo/package.fixed.json --cache-dir demo/fixtures --offline \
+            --output result/report-fixed.json --html result/report-fixed.html
+      - name: Gate on the fixed manifest (expected to PASS)
+        run: securechain check result/report-fixed.json --ignore-file .riskignore.json
+      - name: Upload fixed-manifest reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-fixed
+          path: |
+            result/report-fixed.json
+            result/report-fixed.html
+
+  # 2. package.vulnerable.json has minimist, axios (Medium), moment (High), and
+  #    xml2js, node-ipc (Critical) all at their vulnerable versions and
+  #    unaccepted - only colors is covered by the committed exception. The
+  #    gate is expected to fail and this job is expected to turn red -
+  #    intentional, demonstrating the gate actually blocking a build.
+  scan-vulnerable-manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -e .
+      - name: Scan demo/package.vulnerable.json
+        run: |
+          securechain scan demo/package.vulnerable.json --cache-dir demo/fixtures --offline \
+            --output result/report-vulnerable.json --html result/report-vulnerable.html
+      - name: Gate on the vulnerable manifest (expected to FAIL)
+        run: securechain check result/report-vulnerable.json --ignore-file .riskignore.json
+      - name: Upload vulnerable-manifest reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-vulnerable
+          path: |
+            result/report-vulnerable.json
+            result/report-vulnerable.html
+
+  # 3. Same vulnerable manifest as job 2, but every remaining flagged
+  #    dependency gets a recorded exception first (simulating a developer who
+  #    reviewed each one and chose to accept the risk rather than upgrade).
+  #    The gate passes with warnings logged instead of failing, demonstrating
+  #    the exception mechanism end to end.
+  scan-vulnerable-with-exception:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -e .
+      - name: Scan demo/package.vulnerable.json
+        run: |
+          securechain scan demo/package.vulnerable.json --cache-dir demo/fixtures --offline \
+            --output result/report-exception.json --html result/report-exception.html
+      - name: Record accepted exceptions for the remaining flagged dependencies
+        run: |
+          cp .riskignore.json .riskignore.ci-demo.json
+          securechain accept minimist@1.2.0 --reason "CI demo: accepted pending upstream upgrade" \
+            --ignore-file .riskignore.ci-demo.json --accepted-by "ci-demo"
+          securechain accept axios@1.5.0 --reason "CI demo: accepted pending upstream upgrade" \
+            --ignore-file .riskignore.ci-demo.json --accepted-by "ci-demo"
+          securechain accept moment@2.29.1 --reason "CI demo: accepted pending upstream upgrade" \
+            --ignore-file .riskignore.ci-demo.json --accepted-by "ci-demo"
+          securechain accept xml2js@0.4.19 --reason "CI demo: accepted pending upstream upgrade" \
+            --ignore-file .riskignore.ci-demo.json --accepted-by "ci-demo"
+          securechain accept node-ipc@9.2.1 --reason "CI demo: accepted pending upstream upgrade" \
+            --ignore-file .riskignore.ci-demo.json --accepted-by "ci-demo"
+      - name: Gate with the exceptions on file (expected to PASS with warnings)
+        run: securechain check result/report-exception.json --ignore-file .riskignore.ci-demo.json
+      - name: Upload exception-path reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-exception
+          path: |
+            result/report-exception.json
+            result/report-exception.html
+            .riskignore.ci-demo.json

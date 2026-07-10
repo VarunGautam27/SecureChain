@@ -1,0 +1,73 @@
+{
+  "_comment": "Curated offline cache for demo/package.json, keyed by package@version. References real published advisories (CVE/GHSA IDs) where they exist, used so grading/CI runs are deterministic and don't depend on live network access, rate limits, or a GITHUB_TOKEN. See README 'Offline demo fixtures' section.",
+
+  "lodash@4.17.21": { "status": "no_cve" },
+  "chalk@5.3.0": { "status": "no_cve" },
+  "uuid@9.0.1": { "status": "no_cve" },
+  "debug@4.3.4": { "status": "no_cve" },
+  "semver@7.5.4": { "status": "no_cve" },
+  "commander@11.1.0": { "status": "no_cve" },
+  "dotenv@16.3.1": { "status": "no_cve" },
+  "yargs@17.7.2": { "status": "no_cve" },
+  "picocolors@1.0.0": { "status": "no_cve" },
+
+  "colors@1.4.1": {
+    "status": "no_cve",
+    "summary": "No formal CVE was ever filed for this version. In January 2022 the maintainer intentionally sabotaged colors (and the related faker package), pushing an infinite-loop payload as a form of protest, which broke countless downstream builds. It's treated here purely as a behavioral anomaly (single maintainer, an erratic, out-of-pattern release) rather than a CVSS-scored vulnerability - there is no 'fixed version' to upgrade to, since it wasn't a code vulnerability with a patch; remediation is to pin to a pre-incident version (1.4.0) or replace the dependency."
+  },
+
+  "minimist@1.2.0": {
+    "status": "ok",
+    "cve_id": "CVE-2020-7598",
+    "cvss_score": 5.6,
+    "severity_label": null,
+    "fixed_version": "1.2.6",
+    "source": "github_advisory",
+    "summary": "Prototype pollution in minimist allows an attacker to modify Object.prototype via a crafted __proto__ payload passed to the argument parser."
+  },
+  "minimist@1.2.6": { "status": "no_cve" },
+
+  "axios@1.5.0": {
+    "status": "ok",
+    "cve_id": "CVE-2023-45857",
+    "cvss_score": 6.5,
+    "severity_label": null,
+    "fixed_version": "1.6.0",
+    "source": "github_advisory",
+    "summary": "axios leaks the confidential XSRF-TOKEN cookie value in the Proxy-Authorization header when following a cross-origin redirect, allowing an attacker-controlled proxy target to obtain it."
+  },
+  "axios@1.6.0": { "status": "no_cve" },
+
+  "moment@2.29.1": {
+    "status": "ok",
+    "cve_id": "CVE-2022-31129",
+    "cvss_score": 7.5,
+    "severity_label": null,
+    "fixed_version": "2.29.4",
+    "source": "github_advisory",
+    "summary": "moment's parsing of certain user-controlled date strings has inadequate complexity, allowing a regular-expression-denial-of-service (ReDoS) attack against applications that pass untrusted input to moment's parser."
+  },
+  "moment@2.29.4": { "status": "no_cve" },
+
+  "xml2js@0.4.19": {
+    "status": "ok",
+    "cve_id": "GHSA-776f-qq4e-3rc3",
+    "cvss_score": 9.8,
+    "severity_label": null,
+    "fixed_version": "0.5.0",
+    "source": "github_advisory",
+    "summary": "Prototype pollution in xml2js allows attacker-controlled XML input to modify Object.prototype, potentially leading to denial of service or property injection in the host application."
+  },
+  "xml2js@0.5.0": { "status": "no_cve" },
+
+  "node-ipc@9.2.1": {
+    "status": "ok",
+    "cve_id": "GHSA-lzc9-3d29-fq7f",
+    "cvss_score": 9.8,
+    "severity_label": null,
+    "fixed_version": "9.2.2",
+    "source": "github_advisory",
+    "summary": "node-ipc versions 10.1.1 and 9.2.1 through 9.2.2 contained code that, based on the host machine's IP-derived geolocation, either overwrote or deleted arbitrary files on disk (the 2022 'protestware' incident). Treated here as a Critical-severity supply chain compromise, curated with a representative CVSS-equivalent score."
+  },
+  "node-ipc@9.2.2": { "status": "no_cve" }
+}

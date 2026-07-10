@@ -1,0 +1,22 @@
+{
+  "name": "securechain-demo",
+  "version": "1.0.0",
+  "description": "Same manifest as package.vulnerable.json, with every dependency that has a real upstream fix upgraded to it. colors has no possible fix (a behavioral-only flag, no CVE); it remains at 1.4.1 and relies on the accepted exception already committed in .riskignore.json.",
+  "dependencies": {
+    "lodash": "4.17.21",
+    "chalk": "5.3.0",
+    "uuid": "9.0.1",
+    "debug": "4.3.4",
+    "semver": "7.5.4",
+    "commander": "11.1.0",
+    "dotenv": "16.3.1",
+    "yargs": "17.7.2",
+    "picocolors": "1.0.0",
+    "colors": "1.4.1",
+    "minimist": "1.2.6",
+    "axios": "1.6.0",
+    "moment": "2.29.4",
+    "xml2js": "0.5.0",
+    "node-ipc": "9.2.2"
+  }
+}

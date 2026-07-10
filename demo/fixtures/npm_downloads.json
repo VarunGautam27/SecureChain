@@ -1,0 +1,18 @@
+{
+  "_comment": "Curated weekly download counts for demo/package.json's dependencies. colors' is deliberately low relative to its age, reflecting its real-world decline after the January 2022 self-sabotage incident.",
+  "lodash": 45000000,
+  "chalk": 90000000,
+  "uuid": 60000000,
+  "debug": 70000000,
+  "semver": 50000000,
+  "commander": 40000000,
+  "dotenv": 30000000,
+  "yargs": 35000000,
+  "picocolors": 65000000,
+  "minimist": 60000000,
+  "xml2js": 15000000,
+  "axios": 55000000,
+  "moment": 20000000,
+  "node-ipc": 800000,
+  "colors": 3000
+}

@@ -1,0 +1,22 @@
+{
+  "name": "securechain-manual-test",
+  "version": "1.0.0",
+  "description": "A single, realistic manifest for manually testing the full push -> scan -> fix -> rescan loop yourself. 15 dependencies: 9 clean, 1 Low (a behavioral-only flag with no CVE), 2 Medium, 1 High, 2 Critical (all with real CVEs and real fixed versions except where noted). Every non-Safe entry blocks the CI/CD gate until you either upgrade it or record an exception.",
+  "dependencies": {
+    "lodash": "4.17.21",
+    "chalk": "5.3.0",
+    "uuid": "9.0.1",
+    "debug": "4.3.4",
+    "semver": "7.5.4",
+    "commander": "11.1.0",
+    "dotenv": "16.3.1",
+    "yargs": "17.7.2",
+    "picocolors": "1.0.0",
+    "colors": "1.4.1",
+    "minimist": "1.2.6",
+    "axios": "1.6.0",
+    "moment": "2.29.4",
+    "xml2js": "0.5.0",
+    "node-ipc": "9.2.2"
+  }
+}

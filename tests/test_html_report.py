@@ -200,6 +200,44 @@ def test_accepted_tag_shown_read_only_when_already_in_ignore_file(tmp_path):
     assert "Accept Risk" not in html_output
 
 
+def test_cvss_tab_shows_epss_and_kev_when_present():
+    report = _sample_report(1)
+    report["dependencies"][0]["cvss"] = {
+        "score": 7.5, "cve_id": "CVE-2022-31129", "severity_label": None, "fixed_version": "2.29.4"
+    }
+    report["dependencies"][0]["exploit_intel"] = {
+        "status": "ok", "epss_score": 0.04923, "epss_percentile": 0.91087,
+        "in_kev": True, "kev_date_added": "2022-09-01", "source": "cache",
+    }
+    html_output = render_html_report(report, ignore_file=_NO_IGNORE_FILE)
+
+    assert "EPSS score 0.049" in html_output
+    assert "91%" in html_output
+    assert "Known Exploited Vulnerabilities" in html_output
+    assert ">KEV</span>" in html_output
+
+
+def test_cvss_tab_shows_not_listed_when_not_in_kev():
+    report = _sample_report(1)
+    report["dependencies"][0]["cvss"] = {
+        "score": 6.5, "cve_id": "CVE-2023-45857", "severity_label": None, "fixed_version": "1.6.0"
+    }
+    report["dependencies"][0]["exploit_intel"] = {
+        "status": "ok", "epss_score": 0.00556, "epss_percentile": 0.42431,
+        "in_kev": False, "kev_date_added": None, "source": "cache",
+    }
+    html_output = render_html_report(report, ignore_file=_NO_IGNORE_FILE)
+
+    assert "Not listed on CISA" in html_output
+    assert ">KEV</span>" not in html_output
+
+
+def test_missing_exploit_intel_key_does_not_break_rendering():
+    report = _sample_report(3)  # _sample_report dependencies carry no "exploit_intel" key at all
+    html_output = render_html_report(report, ignore_file=_NO_IGNORE_FILE)
+    assert "EPSS" not in html_output
+
+
 def test_single_file_with_only_chart_js_cdn_as_external_dependency():
     report = _sample_report(3)
     html_output = render_html_report(report, ignore_file=_NO_IGNORE_FILE)

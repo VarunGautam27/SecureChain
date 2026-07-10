@@ -13,6 +13,8 @@ Schema (documented in README.md "JSON Report Schema" section):
       "version": "0.4.19",
       "lookup_status": "ok",
       "cvss": {"score": 9.8, "cve_id": "CVE-...", "source": "cache", "fixed_version": "0.5.0"},
+      "exploit_intel": {"status": "ok", "epss_score": 0.049, "epss_percentile": 0.91,
+                          "in_kev": false, "kev_date_added": null, "source": "cache"},
       "behavioral": {"release_frequency_deviation": .., "maintainer_count": ..,
                       "version_jump_irregularity": .., "download_age_ratio": ..},
       "risk_score": 0.93,
@@ -43,6 +45,7 @@ from pathlib import Path
 from typing import Optional
 
 from securechain.behavioral import BehavioralFeatures
+from securechain.exploit_intel import ExploitIntelResult
 from securechain.ml.explain import ExplanationResult
 from securechain.vuln_lookup import LookupResult
 
@@ -78,6 +81,7 @@ class DependencyRecord:
     escalated: bool
     recommendation: str
     shap: dict
+    exploit_intel: dict
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -96,6 +100,7 @@ def build_dependency_record(
     recommendation: str,
     classifier_explanation: ExplanationResult,
     anomaly_explanation: ExplanationResult,
+    exploit_intel: ExploitIntelResult,
 ) -> DependencyRecord:
     return DependencyRecord(
         package=package,
@@ -108,6 +113,7 @@ def build_dependency_record(
             "fixed_version": lookup_result.fixed_version,
             "severity_label": lookup_result.severity_label,
         },
+        exploit_intel=exploit_intel.to_dict(),
         behavioral=behavioral.to_dict(),
         risk_score=risk_score,
         anomaly_flagged=anomaly_flagged,

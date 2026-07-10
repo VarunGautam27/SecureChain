@@ -20,7 +20,13 @@ that need attention are always at the top regardless of where they appear in
 the manifest, and regardless of which filter is active. Each card has a solid
 severity badge (always visible) and a row of tabs - Recommendation (open by
 default), CVSS, Severity, Behavioral - so a reviewer can drill into exactly
-the detail they want. There is deliberately no separate "Explanation" tab: the
+the detail they want. The CVSS tab also surfaces exploit intelligence (EPSS
+score/percentile from FIRST.org, and CISA KEV catalog membership) when the
+dependency has a CVE-identified advisory - CVSS alone measures potential
+impact, not whether a vulnerability is actually being exploited anywhere, so
+this fills that gap; a KEV-listed dependency also gets a badge next to its
+severity tag, visible without opening any tab. There is deliberately no
+separate "Explanation" tab: the
 classifier's SHAP explanation lives inside Severity (it explains the risk
 score right next to the tier it produced) and the anomaly detector's SHAP
 explanation lives inside Behavioral (it explains why the raw feature values
@@ -253,6 +259,36 @@ def _paragraphs(lines: list[str]) -> str:
     return "".join(f"<p>{_esc(line)}</p>" for line in lines if line)
 
 
+def _exploit_intel_lines(dependency: dict) -> list[str]:
+    """CVSS measures potential impact if exploited; it says nothing about whether
+    a CVE is actually being exploited anywhere. These lines add that missing
+    axis: EPSS (FIRST.org's predicted real-world exploitation probability) and
+    CISA KEV (confirmed active exploitation). Only meaningful for CVE-identified
+    advisories - GHSA-only identifiers have nothing to look up in either feed.
+    """
+    exploit_intel = dependency.get("exploit_intel") or {}
+    status = exploit_intel.get("status")
+    if status != "ok":
+        return []
+
+    lines: list[str] = []
+    if exploit_intel.get("epss_score") is not None:
+        lines.append(
+            f"EPSS score {exploit_intel['epss_score']:.3f} "
+            f"(percentile {exploit_intel['epss_percentile']:.0%}) - FIRST.org's predicted "
+            "probability of real-world exploitation in the next 30 days."
+        )
+    if exploit_intel.get("in_kev"):
+        lines.append(
+            "Listed on CISA's Known Exploited Vulnerabilities catalog "
+            f"since {exploit_intel.get('kev_date_added') or 'an unspecified date'} - "
+            "confirmed active exploitation."
+        )
+    else:
+        lines.append("Not listed on CISA's Known Exploited Vulnerabilities catalog.")
+    return lines
+
+
 def _cvss_lines(dependency: dict) -> list[str]:
     cvss = dependency["cvss"]
     lines: list[str] = []
@@ -266,6 +302,7 @@ def _cvss_lines(dependency: dict) -> list[str]:
         lines.append(f"Identifier {cvss['cve_id']}")
     if cvss.get("fixed_version"):
         lines.append(f"Fixed in version {cvss['fixed_version']}")
+    lines.extend(_exploit_intel_lines(dependency))
     return lines
 
 
@@ -367,6 +404,14 @@ def _render_card(dependency: dict, index: int, ignore_store: dict) -> str:
             f'{_esc(existing.accepted_by)}: {_esc(existing.reason)}">ACCEPTED</span>'
         )
 
+    exploit_intel = dependency.get("exploit_intel") or {}
+    kev_tag = ""
+    if exploit_intel.get("status") == "ok" and exploit_intel.get("in_kev"):
+        kev_tag = (
+            '<span class="accepted-tag" title="Listed on CISA\'s Known Exploited '
+            'Vulnerabilities catalog: confirmed active exploitation">KEV</span>'
+        )
+
     return f"""
     <section class="dep-card" data-package="{_esc(dependency['package'])}" data-severity="{_esc(severity)}">
       <div class="dep-header">
@@ -376,6 +421,7 @@ def _render_card(dependency: dict, index: int, ignore_store: dict) -> str:
         </div>
         <div class="dep-badges">
           {accepted_tag}
+          {kev_tag}
           <span class="severity-badge {sev_class}">{_esc(severity.upper())}</span>
         </div>
       </div>

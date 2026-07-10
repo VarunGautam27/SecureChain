@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Optional
 
 from securechain.behavioral import CachedBehavioralClient, compute_behavioral_features
+from securechain.exploit_intel import CachedExploitIntelClient
 from securechain.manifest import parse_manifest
 from securechain.ml import classifier as classifier_module
 from securechain.ml import anomaly as anomaly_module
@@ -30,6 +31,7 @@ def run_scan(
 
     lookup_client = CachedLookupClient(cache_dir=cache_dir, offline=offline)
     behavioral_client = CachedBehavioralClient(cache_dir=cache_dir, offline=offline)
+    exploit_intel_client = CachedExploitIntelClient(cache_dir=cache_dir, offline=offline)
 
     if classifier_model is None:
         classifier_model = classifier_module.load_classifier()
@@ -39,6 +41,7 @@ def run_scan(
     records: list[DependencyRecord] = []
     for dep in dependencies:
         lookup_result = lookup_client.lookup(dep.name, dep.version)
+        exploit_intel_result = exploit_intel_client.lookup(lookup_result.cve_id)
         behavioral = compute_behavioral_features(dep.name, behavioral_client)
 
         cvss_score = base_cvss_score(lookup_result)
@@ -53,7 +56,7 @@ def run_scan(
 
         severity_result = label_severity(cvss_score, anomaly_flagged)
         recommendation = generate_recommendation(
-            dep.name, severity_result.severity, lookup_result, anomaly_flagged
+            dep.name, severity_result.severity, lookup_result, anomaly_flagged, exploit_intel_result
         )
 
         record = build_dependency_record(
@@ -69,6 +72,7 @@ def run_scan(
             recommendation=recommendation,
             classifier_explanation=classifier_explanation,
             anomaly_explanation=anomaly_explanation,
+            exploit_intel=exploit_intel_result,
         )
         records.append(record)
 

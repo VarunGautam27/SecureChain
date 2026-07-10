@@ -21,7 +21,8 @@ dashboard you keep open.
    hand, and nothing needs to happen locally first.
 2. **`securechain scan` runs inside that GitHub Actions job**, reads
    `package.json`, and for every dependency: looks up its CVE/advisory record,
-   pulls 4 behavioral signals from the npm registry, runs them through the
+   checks real-world exploit intelligence (EPSS score and CISA KEV status) when
+   a CVE ID exists, pulls 4 behavioral signals from the npm registry, runs them through the
    Random Forest (contextual risk score) and Isolation Forest (behavioral
    anomaly flag), explains both with SHAP, and produces a final severity
    (Safe/Low/Medium/High/Critical). This is written to two files:
@@ -201,7 +202,15 @@ cli.py                            scan / check / accept commands (argparse)
 2. **Vulnerability lookup**: cache (if `--cache-dir` given) -> GitHub Advisory Database
    (version-range aware) -> NVD (best-effort keyword fallback). Never raises; a
    failure degrades to `lookup_status: "lookup_failed"` rather than crashing the scan.
-3. **Behavioral feature extraction** from npm registry/downloads metadata:
+3. **Exploit-intelligence lookup** (only when the vulnerability lookup returned a
+   CVE ID, not a GHSA-only identifier): EPSS (FIRST.org's daily-updated predicted
+   probability of real-world exploitation in the next 30 days, plus its percentile)
+   and CISA KEV catalog membership (confirmed active exploitation). CVSS measures
+   potential impact if exploited; it says nothing about whether anyone actually is
+   exploiting it, which is the gap this step closes. Same cache-first, never-raises
+   design as the vulnerability lookup - degrades to `"not_applicable"` for non-CVE
+   identifiers and `"lookup_failed"` on a network/parse error.
+4. **Behavioral feature extraction** from npm registry/downloads metadata:
    - `release_frequency_deviation` - coefficient of variation of the gaps between
      consecutive published versions (self-normalizing against a package's own
      typical cadence).
@@ -210,22 +219,24 @@ cli.py                            scan / check / accept commands (argparse)
      delta (`major*10000 + minor*100 + patch`) between consecutive chronological
      releases.
    - `download_age_ratio` - weekly downloads / package age in days.
-4. **Random Forest** predicts a contextual `risk_score` in `[0, 1]` from CVSS + the
+5. **Random Forest** predicts a contextual `risk_score` in `[0, 1]` from CVSS + the
    4 behavioral features.
-5. **Isolation Forest** predicts a boolean `anomaly_flagged` from the 4 behavioral
+6. **Isolation Forest** predicts a boolean `anomaly_flagged` from the 4 behavioral
    features only (CVSS is deliberately excluded, so a package can be flagged purely
    on unusual behavior with no CVE at all).
-6. **SHAP** explains both model outputs per dependency (`TreeExplainer` for the
+7. **SHAP** explains both model outputs per dependency (`TreeExplainer` for the
    classifier; the anomaly explainer tries `TreeExplainer` first and falls back to
    `KernelExplainer` over `score_samples` if the installed SHAP version doesn't
    support Isolation Forest directly).
-7. **Severity labeling**: a base label from standard CVSS ranges (Critical
+8. **Severity labeling**: a base label from standard CVSS ranges (Critical
    9.0-10.0, High 7.0-8.9, Medium 4.0-6.9, Low 0.1-3.9, Safe = no advisory record),
    then the anomaly detector may escalate by **exactly one tier, never more** - a
    Safe/no-CVE package can reach Low via anomaly alone, but never Medium or higher.
-8. **Recommendation**: upgrade instruction (CVE + fixed version known), manual
+9. **Recommendation**: upgrade instruction (CVE + fixed version known), manual
    mitigation notice (CVE, no fixed version), behavioral audit notice (anomaly, no
-   CVE), or "No action required" (Low/Safe).
+   CVE), or "No action required" (Low/Safe). A KEV-listed CVE gets an urgent prefix
+   regardless of severity tier - confirmed active exploitation outranks a CVSS
+   bucket.
 
 ## JSON report schema
 
@@ -241,6 +252,7 @@ cli.py                            scan / check / accept commands (argparse)
       "version": "0.4.19",
       "lookup_status": "ok",              // "ok" | "no_cve" | "lookup_failed"
       "cvss": {"score": 9.8, "cve_id": "GHSA-776f-qq4e-3rc3", "source": "cache", "fixed_version": "0.5.0", "severity_label": null},
+      "exploit_intel": {"status": "not_applicable", "epss_score": null, "epss_percentile": null, "in_kev": false, "kev_date_added": null, "source": null},
       "behavioral": {"release_frequency_deviation": 0.29, "maintainer_count": 2, "version_jump_irregularity": 0.45, "download_age_ratio": 3565.1, "status": "ok"},
       "risk_score": 0.995,
       "anomaly_flagged": false,
@@ -261,6 +273,15 @@ cli.py                            scan / check / accept commands (argparse)
 is set (i.e. the platform-reported identity of whoever triggered the run), falling
 back to the local OS username when none of those are present.
 
+`exploit_intel.status` is `"ok"` (EPSS score/percentile and KEV membership were
+resolved), `"not_applicable"` (the dependency has no CVE ID to look up - either no
+advisory exists, or the advisory is GHSA-only), or `"lookup_failed"` (a network/parse
+error; never blocks the scan). `epss_score` is FIRST.org's predicted probability
+(0.0-1.0) that this CVE will be exploited in the wild in the next 30 days;
+`epss_percentile` ranks it against every other scored CVE. `in_kev` is `true` only
+if the CVE is confirmed on CISA's Known Exploited Vulnerabilities catalog - real,
+observed exploitation, not a prediction.
+
 ## The HTML report
 
 A single self-contained `.html` file with a minimal light/dark UI (follows your
@@ -275,12 +296,17 @@ via `localStorage`). Layout:
 - **One card per dependency, sorted Critical first down to Safe last** - so whatever
   needs attention is always at the top, regardless of where it happens to sit in the
   manifest. Each card shows the package name, version, an **ACCEPTED** tag (read-only
-  - hover for who/when/why) if it's already in `.riskignore.json`, and a solid
+  - hover for who/when/why) if it's already in `.riskignore.json`, a **KEV** tag if
+  the CVE is confirmed on CISA's Known Exploited Vulnerabilities catalog, and a solid
   severity badge, followed by a row of tabs:
   - **Recommendation** - shown by default: which library/version to upgrade to
     when a fix exists, a manual-mitigation notice when it doesn't, or a
-    behavioral-audit notice for an anomaly-only flag with no CVE at all.
-  - **CVSS** - score, CVE/GHSA identifier, fixed version.
+    behavioral-audit notice for an anomaly-only flag with no CVE at all. A KEV-listed
+    CVE gets an urgent prefix here regardless of severity tier.
+  - **CVSS** - score, CVE/GHSA identifier, fixed version, and (when a CVE ID exists)
+    exploit intelligence: EPSS score/percentile and CISA KEV status. CVSS alone
+    measures potential impact if exploited, not whether anyone actually is
+    exploiting it - this is the piece that closes that gap.
   - **Severity** - base severity vs. final severity and *why* (CVSS analysis,
     whether a behavioral anomaly escalated it and by how much), plus the SHAP
     explanation of what drove the Random Forest's risk score.
@@ -337,10 +363,18 @@ acknowledging as a limitation rather than a solved problem.
 ## Offline demo fixtures
 
 `demo/fixtures/` contains curated cache files (`advisories.json`, `npm_metadata.json`,
-`npm_downloads.json`) for the 15 demo packages, referencing real CVE/GHSA IDs where
-they exist (`CVE-2020-7598` for minimist, `CVE-2023-45857` for axios,
-`CVE-2022-31129` for moment, a curated critical-severity xml2js prototype-pollution
-record, and `GHSA-lzc9-3d29-fq7f` for the real node-ipc "protestware" incident).
+`npm_downloads.json`, `exploit_intel.json`) for the 15 demo packages, referencing
+real CVE/GHSA IDs where they exist (`CVE-2020-7598` for minimist, `CVE-2023-45857`
+for axios, `CVE-2022-31129` for moment, a curated critical-severity xml2js
+prototype-pollution record, and `GHSA-lzc9-3d29-fq7f` for the real node-ipc
+"protestware" incident). `exploit_intel.json` holds real EPSS scores/percentiles
+(pulled from FIRST.org's public API) and real CISA KEV membership checks for the
+three CVE-identified packages, captured on 2026-07-09 - EPSS updates daily, so a
+live re-lookup will return slightly different numbers over time; this is a
+snapshot for deterministic demo/CI runs, not a claim of permanent accuracy.
+xml2js and node-ipc use GHSA identifiers with no CVE ever assigned, so they have
+no entry here - EPSS and KEV are both indexed strictly by CVE ID, and the report
+surfaces this as `"not_applicable"` rather than a failed lookup.
 `--cache-dir demo/fixtures` makes `scan` consult these before falling back to live
 APIs (or, with `--offline`, skip live APIs entirely). This keeps the demo walkthrough
 and CI runs deterministic regardless of live rate limits, tokens, or advisory data
@@ -421,6 +455,14 @@ though:
   in the same repo as the code, reviewed in the same pull requests, with an exact
   package+version match, a reason, a date, and a name on every entry - it travels
   with the codebase, not with the vendor.
+- **Adds the "is this actually being exploited" axis that CVSS alone doesn't
+  cover.** `npm audit` and most CVE-matching scanners report a CVSS score and stop
+  there - CVSS measures potential impact if a vulnerability were exploited, not
+  whether anyone actually is. SecureChain looks up FIRST.org's EPSS score (a
+  daily-updated, ML-predicted real-world exploitation probability) and CISA's KEV
+  catalog (confirmed active exploitation) for every CVE-identified dependency, and
+  a KEV hit overrides the recommendation with an urgent notice regardless of its
+  CVSS-derived severity tier.
 
 ## Methodology notes (for the thesis Evaluation chapter)
 

@@ -122,6 +122,28 @@
   .status-pill.pending { background: #c99a1e; color: #2b2103; }
   .status-pill.idle { background: var(--surface-2); color: var(--text-secondary); }
 
+  .push-result {
+    border-radius: 8px;
+    padding: 0.7rem 0.8rem;
+    font-size: 0.8rem;
+    line-height: 1.5;
+  }
+  .push-result.ok { background: rgba(34,122,61,0.12); color: #1a5c2f; border: 1px solid rgba(34,122,61,0.3); }
+  [data-theme="dark"] .push-result.ok { color: #7fe3a0; }
+  .push-result.error { background: rgba(176,38,26,0.1); color: #8f2016; border: 1px solid rgba(176,38,26,0.3); }
+  [data-theme="dark"] .push-result.error { color: #ff9d92; }
+  .push-result .step-name { font-weight: 700; }
+  .push-result pre {
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: inherit;
+    font-size: 0.78rem;
+    margin: 0.35rem 0 0;
+    opacity: 0.9;
+  }
+  .push-result .guidance { margin-top: 0.5rem; font-weight: 400; }
+  .push-result .retry-btn { margin-top: 0.6rem; }
+
   .main {
     flex: 1;
     overflow-y: auto;
@@ -263,6 +285,7 @@
     <input type="text" id="commitMsg" value="Update dependencies via SecureChain GUI" />
   </div>
   <button id="pushBtn" disabled>Push to GitHub</button>
+  <div id="pushResultPanel" style="display:none;"></div>
   <div id="ciStatusWrap" style="display:none;">
     <span class="status-pill idle" id="ciStatusPill">Not checked yet</span>
   </div>
@@ -602,9 +625,47 @@ function renderResult() {
   renderCards();
 }
 
+function guidanceFor(output) {
+  const text = (output || "").toLowerCase();
+  if (text.includes("rejected") || text.includes("non-fast-forward") || text.includes("fetch first")) {
+    return "The remote has commits this folder does not have yet. Run git pull in this folder to bring them in, resolve anything git flags, then push again.";
+  }
+  if (text.includes("authentication failed") || text.includes("could not read username") || text.includes("permission denied")) {
+    return "Git could not authenticate with the remote. Open a terminal in this folder and run git push once by hand to complete whatever credential prompt is needed, then try again from here.";
+  }
+  if (text.includes("not a git repository")) {
+    return "This folder is not a git repository. Run git init and set a remote first, or point this at a folder that already is one.";
+  }
+  if (text.includes("no configured push destination") || text.includes("no upstream")) {
+    return "This folder has no remote configured yet. Add one, for example git remote add origin <your repository url>, then push again.";
+  }
+  return "Open a terminal in this folder and run git push directly. The full interactive output there will show exactly what is blocking it.";
+}
+
+function renderPushResult(data) {
+  const panel = document.getElementById("pushResultPanel");
+  panel.style.display = "block";
+
+  if (data.ok) {
+    panel.innerHTML = "<div class=\"push-result ok\">Pushed. Waiting for the result from GitHub Actions below.</div>";
+    return;
+  }
+
+  const failedStep = (data.steps || []).find(s => !s.ok) || {};
+  panel.innerHTML =
+    "<div class=\"push-result error\">" +
+    "<div class=\"step-name\">" + escapeHtml(failedStep.step || "Push") + " did not complete</div>" +
+    "<pre>" + escapeHtml(failedStep.output || "No further detail was returned.") + "</pre>" +
+    "<div class=\"guidance\">" + escapeHtml(guidanceFor(failedStep.output)) + "</div>" +
+    "<button class=\"retry-btn\" id=\"retryPushBtn\">Try again</button>" +
+    "</div>";
+  document.getElementById("retryPushBtn").addEventListener("click", () => pushBtn.click());
+}
+
 pushBtn.addEventListener("click", async () => {
   pushBtn.disabled = true;
   pushBtn.textContent = "Pushing";
+  document.getElementById("pushResultPanel").style.display = "none";
   try {
     const res = await fetch("/api/push", {
       method: "POST",
@@ -612,10 +673,8 @@ pushBtn.addEventListener("click", async () => {
       body: JSON.stringify({folder: folderInput.value.trim(), message: document.getElementById("commitMsg").value.trim()}),
     });
     const data = await res.json();
-    if (!data.ok) {
-      alert("Push did not complete. " + JSON.stringify(data.steps));
-      return;
-    }
+    renderPushResult(data);
+    if (!data.ok) return;
     document.getElementById("ciStatusWrap").style.display = "block";
     pollCiStatus();
   } finally {

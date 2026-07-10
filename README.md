@@ -60,14 +60,13 @@ it never replaces CI as the actual enforcement point.
    of a failure; anything neither fixed nor accepted still blocks, exactly as
    before.
 
-This repo actually demonstrates the loop two different ways (see "Demo dataset"
-below for the full breakdown): a polished, always-green/always-red **CI
-walkthrough** (`demo/package.vulnerable.json` and `demo/package.fixed.json`,
-wired into the workflow as 3 separate jobs so you can see pass/fail/exception
-side by side on every push), and a **hands-on exercise** (`demo/package.json`,
-a single file *not* wired into CI, meant to be edited in place by hand - fix a
-dependency, re-scan, see the gate change from fail to pass, exactly like a
-real project).
+This repo actually demonstrates the loop with a single manifest, `demo/package.json`
+(see "Demo dataset" below for the full breakdown), used both ways at once: the
+GitHub Actions workflow scans it in two jobs (one showing the gate blocking a
+build, one showing the same manifest passing once every remaining risk is
+explicitly accepted), and the same file is also the **hands-on exercise** -
+edit it in place by hand, fix a dependency, re-scan, see the gate change from
+fail to pass, exactly like a real project.
 
 **One caveat about "fixing" a behavioral-only flag**: for a dependency flagged
 purely by the Isolation Forest (no CVE at all), the anomaly reflects that
@@ -145,34 +144,39 @@ threshold.
 
 ### Try it against the demo manifest
 
-`demo/package.json` is a single, realistic manifest with 15 dependencies (9 clean,
-6 flagged at Low/Medium/High/Critical) - there is no separate "vulnerable" and
+`demo/package.json` is a single, realistic manifest with 20 dependencies (9 clean,
+11 flagged across Low/Medium/High/Critical) - there is no separate "vulnerable" and
 "fixed" copy. You edit it in place, the same way you'd fix a real project:
 
 ```bash
 securechain scan demo/package.json --cache-dir demo/fixtures --offline
 securechain check result/report.json --ignore-file .riskignore.json
-# exits non-zero: colors (Low), minimist, axios (Medium), moment (High), and
-# xml2js, node-ipc (Critical) are all unaccepted - 6 failures.
+# exits non-zero: minimist, axios, word-wrap (Medium), moment, ansi-regex,
+# glob-parent, json5, tar (High), and xml2js, node-ipc (Critical) are all
+# unaccepted - 10 failures. colors (Low) already has a recorded exception,
+# so it only logs a warning.
 
-securechain accept colors@1.4.1 --reason "no fix possible, reviewed" --ignore-file .riskignore.json
-securechain check result/report.json --ignore-file .riskignore.json
-# colors now warns instead of failing; the other 5 unaccepted ones still block.
-
-# Now actually fix the other 5 by editing demo/package.json yourself:
-#   minimist  1.2.0 -> 1.2.6
-#   axios     1.5.0 -> 1.6.0
-#   moment    2.29.1 -> 2.29.4
-#   xml2js    0.4.19 -> 0.5.0
-#   node-ipc  9.2.1 -> 9.2.2
+# colors already has a recorded exception committed in .riskignore.json, so
+# it only ever warns, not fails. Fix the other 10 by editing demo/package.json
+# yourself:
+#   minimist    1.2.0 -> 1.2.6
+#   axios       1.5.0 -> 1.6.0
+#   word-wrap   1.2.3 -> 1.2.4
+#   moment      2.29.1 -> 2.29.4
+#   ansi-regex  5.0.0 -> 5.0.1
+#   glob-parent 5.1.1 -> 5.1.2
+#   json5       2.2.1 -> 2.2.2
+#   tar         6.1.0 -> 6.1.1
+#   xml2js      0.4.19 -> 0.5.0
+#   node-ipc    9.2.1 -> 9.2.2
 
 securechain scan demo/package.json --cache-dir demo/fixtures --offline
 securechain check result/report.json --ignore-file .riskignore.json
 # exits zero: every CVE-based finding was fixed by upgrading; colors (the one
-# behavioral-only, no-CVE flag) is already accepted from the step above.
+# behavioral-only, no-CVE flag) is already accepted.
 ```
 
-`--cache-dir demo/fixtures` points the scanner at curated offline fixtures for the 15
+`--cache-dir demo/fixtures` points the scanner at curated offline fixtures for the 20
 demo packages (see below) so the walkthrough is deterministic and doesn't depend on
 live network access, API tokens, or rate limits. Omit it (and `--offline`) for a real
 scan against live NVD / GitHub Advisory / npm registry data.
@@ -245,7 +249,7 @@ cli.py                            scan / check / accept commands (argparse)
 ```jsonc
 {
   "scan_date": "2026-07-09T00:00:00+00:00",
-  "manifest_path": "demo/package.vulnerable.json",
+  "manifest_path": "demo/package.json",
   "scanned_by": "ayush",
   "summary": {"total": 10, "critical": 2, "high": 1, "medium": 3, "low": 2, "safe": 2},
   "dependencies": [
@@ -392,10 +396,10 @@ changing over time. Omit both flags for a real scan against live data.
 
 ## Demo dataset
 
-`demo/package.vulnerable.json` / `demo/package.fixed.json` - the pair wired
-into the 3-job GitHub Actions workflow so pass/fail/exception are always
-visible side by side on every push - carry 20 packages spanning all 5
-severity tiers:
+`demo/package.json` is the single manifest wired into the 2-job GitHub Actions
+workflow, so a blocked build and an exception accepted pass are always
+visible on every push, and it doubles as the hands-on manual exercise. It
+carries 20 packages spanning all 5 severity tiers:
 
 | Package | Version | Expected severity | Why |
 |---|---|---|---|
@@ -422,20 +426,13 @@ severity tiers:
 
 None of the 5 CVEs added above (or the 3 added earlier) are listed on CISA's KEV catalog - verified directly against the live catalog, not assumed.
 
-`demo/package.json` is a separate, smaller 15-dependency manifest meant for a
-hands-on manual exercise (see "Try it against the demo manifest" above) - it
-is intentionally not kept in lockstep with the 20-package CI pair above, since
-it's meant to be edited by hand, not regenerated.
-
 The committed `.riskignore.json` carries one real, permanent entry:
 `colors@1.4.1` (no possible fix, so it's accepted rather than blocking every
-scan forever). Scanning `demo/package.vulnerable.json` and running `check`
+scan forever). Scanning `demo/package.json` and running `check` as committed
 exits non-zero with 10 failures (colors itself just logs a warning, already
-covered); scanning `demo/package.fixed.json` (the other 10 dependencies
-upgraded to the versions above) exits zero. `demo/package.json` starts out
-identical to the vulnerable manifest - work through it by hand, following the
-"Try it against the demo manifest" walkthrough above, to reach the same
-clean-pass result yourself.
+covered). Work through the remaining 10 by hand, following the "Try it
+against the demo manifest" walkthrough above, upgrading each to its fixed
+version or accepting it, to reach a clean pass yourself.
 
 ## How this differs from Dependabot / Snyk / `npm audit` / Sonatype Nexus Lifecycle / JFrog Xray
 

@@ -1,5 +1,5 @@
 """Full pipeline regression test: scan -> check -> HTML generation against the
-documented 15-dependency demo manifest, tying every component together.
+documented 20-dependency demo manifest, tying every component together.
 """
 
 from securechain.gate import evaluate_gate
@@ -22,11 +22,19 @@ EXPECTED_SEVERITIES = {
     "moment": "High",
     "xml2js": "Critical",
     "node-ipc": "Critical",
+    "ansi-regex": "High",
+    "glob-parent": "High",
+    "json5": "High",
+    "word-wrap": "Medium",
+    "tar": "High",
 }
 
 # Every non-Safe dependency here has no accepted exception in a nonexistent
-# ignore file, so all 6 must block under the default "safe" threshold.
-_EXPECTED_BLOCKERS = ["colors", "minimist", "axios", "moment", "xml2js", "node-ipc"]
+# ignore file, so all 11 must block under the default "safe" threshold.
+_EXPECTED_BLOCKERS = [
+    "colors", "minimist", "axios", "moment", "xml2js", "node-ipc",
+    "ansi-regex", "glob-parent", "json5", "word-wrap", "tar",
+]
 
 # minimist/axios/moment carry a real CVE ID in the demo fixtures, so exploit
 # intelligence (EPSS/KEV) is looked up for them; xml2js/node-ipc use GHSA
@@ -39,6 +47,11 @@ _EXPECTED_EXPLOIT_INTEL_STATUS = {
     "xml2js": "not_applicable",
     "node-ipc": "not_applicable",
     "lodash": "not_applicable",
+    "ansi-regex": "ok",
+    "glob-parent": "ok",
+    "json5": "ok",
+    "word-wrap": "ok",
+    "tar": "ok",
 }
 
 

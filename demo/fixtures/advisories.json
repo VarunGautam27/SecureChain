@@ -69,5 +69,60 @@
     "source": "github_advisory",
     "summary": "node-ipc versions 10.1.1 and 9.2.1 through 9.2.2 contained code that, based on the host machine's IP-derived geolocation, either overwrote or deleted arbitrary files on disk (the 2022 'protestware' incident). Treated here as a Critical-severity supply chain compromise, curated with a representative CVSS-equivalent score."
   },
-  "node-ipc@9.2.2": { "status": "no_cve" }
+  "node-ipc@9.2.2": { "status": "no_cve" },
+
+  "ansi-regex@5.0.0": {
+    "status": "ok",
+    "cve_id": "CVE-2021-3807",
+    "cvss_score": 7.5,
+    "severity_label": null,
+    "fixed_version": "5.0.1",
+    "source": "github_advisory",
+    "summary": "ansi-regex is vulnerable to Regular Expression Denial of Service (ReDoS): an inefficient regular expression used to match ANSI escape codes can be forced into catastrophic backtracking by a crafted, invalid escape sequence, exhausting CPU on the process parsing it."
+  },
+  "ansi-regex@5.0.1": { "status": "no_cve" },
+
+  "glob-parent@5.1.1": {
+    "status": "ok",
+    "cve_id": "CVE-2020-28469",
+    "cvss_score": 7.5,
+    "severity_label": null,
+    "fixed_version": "5.1.2",
+    "source": "github_advisory",
+    "summary": "The enclosure regex used by glob-parent before 5.1.2 to detect brace/bracket patterns is a non-linear regular expression; a crafted input (e.g. a brace followed by many path separators) triggers catastrophic backtracking, causing a Regular Expression Denial of Service."
+  },
+  "glob-parent@5.1.2": { "status": "no_cve" },
+
+  "json5@2.2.1": {
+    "status": "ok",
+    "cve_id": "CVE-2022-46175",
+    "cvss_score": 7.1,
+    "severity_label": null,
+    "fixed_version": "2.2.2",
+    "source": "github_advisory",
+    "summary": "The parse method of JSON5 before 2.2.2 does not restrict parsing of keys named __proto__, so a specially crafted JSON5 string can pollute Object.prototype of the resulting object, potentially leading to denial of service or, depending on how the polluted object is later used, further application-level compromise."
+  },
+  "json5@2.2.2": { "status": "no_cve" },
+
+  "word-wrap@1.2.3": {
+    "status": "ok",
+    "cve_id": "CVE-2023-26115",
+    "cvss_score": 5.3,
+    "severity_label": null,
+    "fixed_version": "1.2.4",
+    "source": "github_advisory",
+    "summary": "word-wrap uses an insecure regular expression when trimming trailing whitespace; a specially crafted input string triggers catastrophic backtracking in that regex, causing a Regular Expression Denial of Service on the process handling it."
+  },
+  "word-wrap@1.2.4": { "status": "no_cve" },
+
+  "tar@6.1.0": {
+    "status": "ok",
+    "cve_id": "CVE-2021-32804",
+    "cvss_score": 8.2,
+    "severity_label": null,
+    "fixed_version": "6.1.1",
+    "source": "github_advisory",
+    "summary": "node-tar before 6.1.1 insufficiently sanitizes absolute paths inside an archive: a file path with a repeated path root (e.g. multiple leading slashes) has only a single root stripped, so extraction can still resolve to an absolute path outside the intended directory, allowing arbitrary file creation or overwrite."
+  },
+  "tar@6.1.1": { "status": "no_cve" }
 }

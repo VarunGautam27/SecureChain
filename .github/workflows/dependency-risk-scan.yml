@@ -51,11 +51,12 @@ jobs:
             result/report-fixed.json
             result/report-fixed.html
 
-  # 2. package.vulnerable.json has minimist, axios (Medium), moment (High), and
-  #    xml2js, node-ipc (Critical) all at their vulnerable versions and
-  #    unaccepted - only colors is covered by the committed exception. The
-  #    gate is expected to fail and this job is expected to turn red -
-  #    intentional, demonstrating the gate actually blocking a build.
+  # 2. package.vulnerable.json has minimist, axios, word-wrap (Medium), moment,
+  #    ansi-regex, glob-parent, json5, tar (High), and xml2js, node-ipc
+  #    (Critical) all at their vulnerable versions and unaccepted - only
+  #    colors is covered by the committed exception. The gate is expected to
+  #    fail and this job is expected to turn red - intentional, demonstrating
+  #    the gate actually blocking a build.
   scan-vulnerable-manifest:
     runs-on: ubuntu-latest
     steps:
@@ -110,6 +111,16 @@ jobs:
           securechain accept xml2js@0.4.19 --reason "CI demo: accepted pending upstream upgrade" \
             --ignore-file .riskignore.ci-demo.json --accepted-by "ci-demo"
           securechain accept node-ipc@9.2.1 --reason "CI demo: accepted pending upstream upgrade" \
+            --ignore-file .riskignore.ci-demo.json --accepted-by "ci-demo"
+          securechain accept ansi-regex@5.0.0 --reason "CI demo: accepted pending upstream upgrade" \
+            --ignore-file .riskignore.ci-demo.json --accepted-by "ci-demo"
+          securechain accept glob-parent@5.1.1 --reason "CI demo: accepted pending upstream upgrade" \
+            --ignore-file .riskignore.ci-demo.json --accepted-by "ci-demo"
+          securechain accept json5@2.2.1 --reason "CI demo: accepted pending upstream upgrade" \
+            --ignore-file .riskignore.ci-demo.json --accepted-by "ci-demo"
+          securechain accept word-wrap@1.2.3 --reason "CI demo: accepted pending upstream upgrade" \
+            --ignore-file .riskignore.ci-demo.json --accepted-by "ci-demo"
+          securechain accept tar@6.1.0 --reason "CI demo: accepted pending upstream upgrade" \
             --ignore-file .riskignore.ci-demo.json --accepted-by "ci-demo"
       - name: Gate with the exceptions on file (expected to PASS with warnings)
         run: securechain check result/report-exception.json --ignore-file .riskignore.ci-demo.json

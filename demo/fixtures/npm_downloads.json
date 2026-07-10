@@ -14,5 +14,10 @@
   "axios": 55000000,
   "moment": 20000000,
   "node-ipc": 800000,
-  "colors": 3000
+  "colors": 3000,
+  "ansi-regex": 500000000,
+  "glob-parent": 300000000,
+  "json5": 180000000,
+  "word-wrap": 150000000,
+  "tar": 90000000
 }

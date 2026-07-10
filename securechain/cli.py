@@ -3,16 +3,22 @@
   securechain scan <manifest-path>
   securechain check <report.json> --max-severity safe --ignore-file .riskignore.json
   securechain accept <package>@<version> --reason "<text>" --ignore-file .riskignore.json
+  securechain gui
 
 Intended to run inside CI/CD (see .github/workflows/dependency-risk-scan.yml):
 scan always writes result/report.json and result/report.html, then check reads
 that JSON report and exits non-zero if anything above --max-severity (default
 safe, i.e. Low/Medium/High/Critical all block) isn't covered by
-.riskignore.json. A risk is a risk regardless of tier - nothing short of a
+.riskignore.json. A risk is a risk regardless of tier, nothing short of a
 genuinely clean dependency passes without either a real fix or a deliberate,
-recorded acceptance. There is no local server and no interactive step - review
-the HTML report, fix package.json (upgrade the dependency) or run `accept`
-(record a deliberate exception), then push again.
+recorded acceptance.
+
+The optional gui command starts a local preview server (see
+securechain/gui/). It is a convenience layer only, never a second
+enforcement point: the CI run triggered by a push remains the only result
+that actually blocks a merge. Review the report (in the browser through gui,
+or as the plain report.html file), fix package.json (upgrade the dependency)
+or run accept (record a deliberate exception), then push again.
 """
 
 from __future__ import annotations
@@ -81,6 +87,22 @@ def _cmd_check(args: argparse.Namespace) -> int:
     return result.exit_code
 
 
+def _cmd_gui(args: argparse.Namespace) -> int:
+    import threading
+    import webbrowser
+
+    from securechain.gui.server import create_app
+
+    host, port = "127.0.0.1", args.port
+    url = f"http://{host}:{port}"
+    if not args.no_browser:
+        threading.Timer(1.0, lambda: webbrowser.open(url)).start()
+    print(f"SecureChain GUI running at {url}")
+    print("Press Control C to stop.")
+    create_app().run(host=host, port=port, debug=False)
+    return 0
+
+
 def _cmd_accept(args: argparse.Namespace) -> int:
     if "@" not in args.package_at_version:
         print("Error: expected <package>@<version>, e.g. xml2js@0.4.19", file=sys.stderr)
@@ -128,6 +150,11 @@ def build_parser() -> argparse.ArgumentParser:
     accept_parser.add_argument("--ignore-file", default=".riskignore.json")
     accept_parser.add_argument("--accepted-by", default=None)
     accept_parser.set_defaults(func=_cmd_accept)
+
+    gui_parser = subparsers.add_parser("gui", help="Launch the local preview GUI")
+    gui_parser.add_argument("--port", type=int, default=5678)
+    gui_parser.add_argument("--no-browser", action="store_true")
+    gui_parser.set_defaults(func=_cmd_gui)
 
     return parser
 

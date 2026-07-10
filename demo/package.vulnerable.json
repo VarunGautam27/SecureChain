@@ -17,6 +17,11 @@
     "axios": "1.5.0",
     "moment": "2.29.1",
     "xml2js": "0.4.19",
-    "node-ipc": "9.2.1"
+    "node-ipc": "9.2.1",
+    "ansi-regex": "5.0.0",
+    "glob-parent": "5.1.1",
+    "json5": "2.2.1",
+    "word-wrap": "1.2.3",
+    "tar": "6.1.0"
   }
 }

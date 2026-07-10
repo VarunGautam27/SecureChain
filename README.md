@@ -6,11 +6,13 @@ and behavioral anomaly detection, explains its scores with SHAP, and emits a
 machine-readable JSON report (for a CI/CD gate) plus a self-contained, minimal,
 light/dark HTML report, sorted worst-severity-first, for human review.
 
-This is a CI/CD-first tool. There is no local server, no login, no database, no
-interactive step. `scan` always writes its two output files; the intended flow is
-"push, CI scans, CI blocks or passes, developer reads the report artifact, fixes or
-accepts, pushes again" - the same shape as Dependabot or `npm audit` in CI, not a
-dashboard you keep open.
+This is a CI/CD first tool. `scan` always writes its two output files; the intended
+flow is push, CI scans, CI blocks or passes, developer reads the report artifact,
+fixes or accepts, pushes again, the same shape as Dependabot or `npm audit` in CI,
+not a dashboard you keep open. An optional local GUI (see
+[GUI_GUIDE.md](GUI_GUIDE.md)) is available as a convenience layer on top of this
+same flow, useful for reviewing a scan and pushing without leaving one window, but
+it never replaces CI as the actual enforcement point.
 
 
 ## How it actually works, end to end
@@ -390,11 +392,10 @@ changing over time. Omit both flags for a real scan against live data.
 
 ## Demo dataset
 
-The same 15 packages, spanning all 5 severity tiers, appear in three files:
-`demo/package.json` (the hands-on exercise copy - edit it yourself), and the
-`demo/package.vulnerable.json` / `demo/package.fixed.json` pair (wired into the
-3-job GitHub Actions workflow so pass/fail/exception are always visible
-side by side on every push, without needing anyone to edit anything).
+`demo/package.vulnerable.json` / `demo/package.fixed.json` - the pair wired
+into the 3-job GitHub Actions workflow so pass/fail/exception are always
+visible side by side on every push - carry 20 packages spanning all 5
+severity tiers:
 
 | Package | Version | Expected severity | Why |
 |---|---|---|---|
@@ -410,67 +411,106 @@ side by side on every push, without needing anyone to edit anything).
 | colors | 1.4.1 | Low | No CVE was ever filed - in January 2022 the maintainer intentionally sabotaged this exact version (and the related `faker` package) as a protest, breaking countless builds. A single maintainer and a sharply irregular release history trigger the one-tier anomaly escalation from Safe. There's no fixed version to upgrade to (it wasn't a code vulnerability); it can only be resolved by accepting it in `.riskignore.json` or removing the dependency - downgrading does **not** clear it, since the anomaly reflects the package's whole registry history, not the pinned version. |
 | minimist | 1.2.0 | Medium | Known CVE (CVE-2020-7598, prototype pollution), CVSS 5.6, fix available in 1.2.6. |
 | axios | 1.5.0 | Medium | Known CVE (CVE-2023-45857, cross-origin cookie leak via redirected proxy auth), CVSS 6.5, fix available in 1.6.0. |
+| word-wrap | 1.2.3 | Medium | Known CVE (CVE-2023-26115, ReDoS when trimming input), CVSS 5.3, fix available in 1.2.4. |
 | moment | 2.29.1 | High | Known CVE (CVE-2022-31129, ReDoS in date parsing), CVSS 7.5, fix available in 2.29.4. |
+| ansi-regex | 5.0.0 | High | Known CVE (CVE-2021-3807, ReDoS matching invalid ANSI escape codes), CVSS 7.5, fix available in 5.0.1. |
+| glob-parent | 5.1.1 | High | Known CVE (CVE-2020-28469, ReDoS in the enclosure regex), CVSS 7.5, fix available in 5.1.2. |
+| json5 | 2.2.1 | High | Known CVE (CVE-2022-46175, prototype pollution via `__proto__` keys), CVSS 7.1, fix available in 2.2.2. |
+| tar | 6.1.0 | High | Known CVE (CVE-2021-32804, arbitrary file creation/overwrite via insufficiently sanitized absolute paths), CVSS 8.2, fix available in 6.1.1. |
 | xml2js | 0.4.19 | Critical | Known prototype-pollution advisory, curated at CVSS 9.8 for this walkthrough, fix available in 0.5.0. |
 | node-ipc | 9.2.1 | Critical | Known advisory (GHSA-lzc9-3d29-fq7f, the 2022 "protestware" incident: geo-targeted destructive file writes), curated at CVSS 9.8, fix available in 9.2.2. |
+
+None of the 5 CVEs added above (or the 3 added earlier) are listed on CISA's KEV catalog - verified directly against the live catalog, not assumed.
+
+`demo/package.json` is a separate, smaller 15-dependency manifest meant for a
+hands-on manual exercise (see "Try it against the demo manifest" above) - it
+is intentionally not kept in lockstep with the 20-package CI pair above, since
+it's meant to be edited by hand, not regenerated.
 
 The committed `.riskignore.json` carries one real, permanent entry:
 `colors@1.4.1` (no possible fix, so it's accepted rather than blocking every
 scan forever). Scanning `demo/package.vulnerable.json` and running `check`
-exits non-zero with 5 failures (colors itself just logs a warning, already
-covered); scanning `demo/package.fixed.json` (the other 5 dependencies
+exits non-zero with 10 failures (colors itself just logs a warning, already
+covered); scanning `demo/package.fixed.json` (the other 10 dependencies
 upgraded to the versions above) exits zero. `demo/package.json` starts out
 identical to the vulnerable manifest - work through it by hand, following the
 "Try it against the demo manifest" walkthrough above, to reach the same
 clean-pass result yourself.
 
-## How this differs from Dependabot / Snyk / `npm audit`
+## How this differs from Dependabot / Snyk / `npm audit` / Sonatype Nexus Lifecycle / JFrog Xray
 
 Being honest about scope first: those tools have vastly larger, continuously
 updated vulnerability databases, cover many ecosystems (not just npm), and are
 maintained by dedicated security teams - this is a research prototype, not a
-production competitor on raw coverage. The methodological differences are real,
-though:
+production competitor on raw coverage. It's also important to be precise about
+*which* claims still hold against *which* competitor - some capabilities that
+distinguish SecureChain from Dependabot/`npm audit` are already present, and in
+some cases more mature, in Snyk and JFrog Xray specifically. Overstating the
+gap against those two would not survive scrutiny, so this section is scoped
+tool by tool rather than as one blanket claim.
 
-- **Detects risk that has no CVE yet.** Dependabot, Snyk, and `npm audit` are all
-  fundamentally advisory-database lookups: if no CVE/GHSA record has been published
-  for a package, they have nothing to say about it. SecureChain's Isolation Forest
-  scores *behavioral* signals (release-cadence irregularity, maintainer
-  concentration, version-jump anomalies, download-to-age ratio) that can flag a
-  compromised package during the window before anyone has filed an advisory - which
-  is exactly the window that matters most in a supply-chain attack (see colors and
-  node-ipc in the demo dataset: both are real incidents where behavior looked wrong
-  well before, or entirely without, a clean CVSS-scored CVE).
-- **Explains itself per feature, not just per CVE.** Existing tools report a CVE ID
-  and a CVSS score; they don't explain why *their own* tool considers something
-  risky beyond that lookup. SecureChain's SHAP layer attributes the Random Forest's
-  risk score and the Isolation Forest's anomaly flag to specific features ("flagged
-  due to a single maintainer and an unusual release spike"), which is closer to how
-  explainable-AI security research argues these tools should behave.
-- **Caps ML-driven escalation by rule, not by trusting the model.** A lot of
-  ML-for-security research ships a raw opaque score with no bound on how far a model
-  can move a decision. SecureChain's severity engine deliberately caps the anomaly
-  detector's influence at exactly one tier and only when a CVSS base already exists
-  or a real advisory does - it can never turn "no CVE at all" into "Critical" on its
-  own. That's a guardrail most black-box ML security scoring doesn't have.
-- **Platform-agnostic by construction.** Dependabot is tied to GitHub's
-  infrastructure; Snyk requires a hosted account and API key. SecureChain's gate is
-  a CLI exit code - it runs identically in Jenkins, GitLab CI, CircleCI, or a bare
-  terminal, and can run entirely offline against cached advisory/registry data with
-  zero external account required.
-- **A portable, diffable audit trail.** Dependabot's "dismiss alert" lives in
-  GitHub's own database, tied to that platform. `.riskignore.json` is a plain file
-  in the same repo as the code, reviewed in the same pull requests, with an exact
-  package+version match, a reason, a date, and a name on every entry - it travels
-  with the codebase, not with the vendor.
-- **Adds the "is this actually being exploited" axis that CVSS alone doesn't
-  cover.** `npm audit` and most CVE-matching scanners report a CVSS score and stop
-  there - CVSS measures potential impact if a vulnerability were exploited, not
-  whether anyone actually is. SecureChain looks up FIRST.org's EPSS score (a
-  daily-updated, ML-predicted real-world exploitation probability) and CISA's KEV
-  catalog (confirmed active exploitation) for every CVE-identified dependency, and
-  a KEV hit overrides the recommendation with an urgent notice regardless of its
-  CVSS-derived severity tier.
+**Against Dependabot and `npm audit`** (both are close to pure CVE/GHSA-database
+lookups, no ML layer, no exploit-likelihood signal):
+- **Detects risk that has no CVE yet.** If no CVE/GHSA record has been published
+  for a package, Dependabot and `npm audit` have nothing to say about it.
+  SecureChain's Isolation Forest scores *behavioral* signals (release-cadence
+  irregularity, maintainer concentration, version-jump anomalies,
+  download-to-age ratio) that can flag a compromised package before anyone has
+  filed an advisory (see colors and node-ipc in the demo dataset - both real
+  incidents where behavior looked wrong well before, or entirely without, a
+  clean CVSS-scored CVE).
+- **Adds the exploit-likelihood axis they lack.** Neither Dependabot nor
+  `npm audit` incorporates EPSS or CISA KEV; both report a CVSS/GHSA severity
+  and stop there. SecureChain looks up FIRST.org's EPSS score and CISA KEV
+  status for every CVE-identified dependency, with a KEV hit overriding the
+  recommendation regardless of severity tier.
+- **Platform-agnostic and account-free.** Dependabot is tied to GitHub's
+  infrastructure. SecureChain's gate is a CLI exit code, runs identically in
+  any CI platform, and works fully offline with zero account required.
+
+**Against Snyk and JFrog Xray - correcting an overstatement.** Both already
+incorporate EPSS and exploit-maturity signals into their own risk/priority
+scoring, and both perform **reachability analysis** (checking whether your own
+code actually calls the vulnerable function) - something SecureChain does not
+do at all, so a vulnerable version is treated as equally risky whether or not
+the vulnerable code path is ever invoked. Neither "adds an exploit-likelihood
+axis" nor "detects pre-CVE risk" can honestly be claimed as an edge over these
+two specifically. What still stands:
+- **An open, published, deterministic scoring rule**, not a proprietary
+  formula. Snyk's Risk Score and Xray's policy engine are black boxes from the
+  outside; SecureChain's severity fusion (CVSS-authoritative, anomaly
+  escalation capped at exactly one tier, never a downgrade) is inspectable
+  source code, not a vendor-internal weighting.
+- **Formal SHAP additive attribution**, not a factor checklist. Snyk shows
+  which factors (reachability, EPSS, social trends, ...) contributed to a
+  score; SecureChain's SHAP values are a mathematically consistent
+  decomposition (base value + sum of per-feature contributions = model
+  output) for both the Random Forest and the Isolation Forest.
+- **No vendor lock-in.** Free, self-hostable, fully offline-capable, no
+  account or API key, source fully readable.
+- **A git-native audit trail.** `.riskignore.json` is a plain file reviewed in
+  the same pull requests as the code, not a record inside a vendor's hosted
+  dashboard.
+
+**Against Sonatype Nexus Lifecycle - a different mechanism, not a strictly
+weaker one.** Nexus Lifecycle's Repository Firewall proactively blocks
+malicious/typosquat/policy-violating packages *at install time*, backed by a
+curated threat-intelligence database (Sonatype reported 454,648 newly
+identified malicious packages in 2025 alone, over 1.2 million cumulative since
+2019). That is a more mature, larger-scale version of the same goal
+SecureChain's Isolation Forest is going after with 4 behavioral features and
+no curated malicious-package database behind it - this is an honest
+disadvantage, not a wash. What SecureChain still offers that Nexus Lifecycle
+doesn't publish: the same three points above (open scoring rule, formal SHAP
+attribution, git-native audit trail) plus the fact that SecureChain's
+detection runs entirely on public data (npm registry, GitHub Advisory, NVD,
+EPSS, CISA KEV) with no proprietary threat-intel subscription required.
+
+**A portable, diffable audit trail** (holds against all five): Dependabot's
+"dismiss alert" and Snyk/Xray/Nexus's dashboards all keep exception decisions
+inside the vendor's own system. `.riskignore.json` is a plain file in the same
+repo as the code, with an exact package+version match, a reason, a date, and a
+name on every entry - it travels with the codebase, not with any vendor.
 
 ## Methodology notes (for the thesis Evaluation chapter)
 
@@ -493,6 +533,12 @@ though:
   version-matched to npm package names, so `NVDClient` is used only as a fallback
   when GitHub Advisory Database (which is version-range aware for the npm ecosystem)
   has no record.
+- **"Exploit prediction" scope**: SecureChain does not train its own exploit-prediction
+  model. It investigates and integrates FIRST.org's existing EPSS model and CISA's
+  KEV catalog - both established, published techniques - rather than building a novel
+  predictive model from scratch. This project's ML contribution is the dependency risk
+  classifier (Random Forest) and the behavioral anomaly detector (Isolation Forest);
+  exploit-likelihood is sourced from, not modeled by, this project.
 
 ## Possible extensions
 

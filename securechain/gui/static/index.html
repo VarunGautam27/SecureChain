@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SecureChain</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --sidebar: #f7f7f8;
+    --surface: #ffffff;
+    --surface-2: #f2f2f3;
+    --border: #e3e3e6;
+    --text: #1a1a1a;
+    --text-secondary: #6e6e78;
+    --accent: #10a37f;
+    --accent-text: #ffffff;
+  }
+  [data-theme="dark"] {
+    --bg: #131316;
+    --sidebar: #0f0f11;
+    --surface: #1b1b1f;
+    --surface-2: #232328;
+    --border: #2c2c33;
+    --text: #ececec;
+    --text-secondary: #9a9aa4;
+    --accent: #19c37d;
+    --accent-text: #0b0b0d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+  .sidebar {
+    width: 320px;
+    flex-shrink: 0;
+    background: var(--sidebar);
+    border-right: 1px solid var(--border);
+    padding: 1.2rem 1rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+  }
+  .brand {
+    font-weight: 700;
+    font-size: 1.05rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .brand .dot { width: 0.6rem; height: 0.6rem; border-radius: 50%; background: var(--accent); }
+  .field-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+    margin-bottom: 0.35rem;
+    font-weight: 600;
+  }
+  .field { display: flex; flex-direction: column; }
+  select {
+    width: 100%;
+    padding: 0.5rem 0.6rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.83rem;
+  }
+  input[type="text"], textarea {
+    width: 100%;
+    padding: 0.55rem 0.7rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.85rem;
+  }
+  textarea { resize: vertical; min-height: 3.2rem; }
+  .row { display: flex; gap: 0.5rem; }
+  .row input[type="text"] { flex: 1; }
+  button {
+    font-family: inherit;
+    font-size: 0.83rem;
+    font-weight: 600;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    padding: 0.55rem 0.9rem;
+    cursor: pointer;
+  }
+  button:hover { background: var(--surface-2); }
+  button.primary {
+    background: var(--accent);
+    color: var(--accent-text);
+    border-color: var(--accent);
+  }
+  button.primary:hover { filter: brightness(1.05); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .check-row { display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; color: var(--text-secondary); }
+  .hint { font-size: 0.76rem; color: var(--text-secondary); line-height: 1.4; }
+  .divider { border-top: 1px solid var(--border); margin: 0.2rem 0; }
+
+  .stat-mini-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; }
+  .stat-mini { border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.5rem; text-align: center; background: var(--surface); }
+  .stat-mini .n { font-weight: 700; font-size: 1.05rem; }
+  .stat-mini .l { font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em; }
+
+  .status-pill { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.7rem; border-radius: 999px; font-size: 0.78rem; font-weight: 600; }
+  .status-pill.success { background: #227a3d; color: #fff; }
+  .status-pill.failure { background: #b0261a; color: #fff; }
+  .status-pill.pending { background: #c99a1e; color: #2b2103; }
+  .status-pill.idle { background: var(--surface-2); color: var(--text-secondary); }
+
+  .main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.6rem 2.4rem 4rem;
+  }
+  .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.4rem; }
+  .topbar h1 { font-size: 1.15rem; margin: 0; font-weight: 700; }
+  .empty-state {
+    max-width: 44rem;
+    margin: 3rem auto;
+    text-align: center;
+    color: var(--text-secondary);
+  }
+  .empty-state h2 { color: var(--text); font-size: 1.2rem; margin-bottom: 0.6rem; }
+
+  .gate-banner {
+    border-radius: 10px;
+    padding: 0.9rem 1.1rem;
+    margin-bottom: 1.2rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .gate-banner.pass { background: rgba(34,122,61,0.12); color: #1a5c2f; border: 1px solid rgba(34,122,61,0.35); }
+  [data-theme="dark"] .gate-banner.pass { color: #7fe3a0; }
+  .gate-banner.fail { background: rgba(176,38,26,0.1); color: #8f2016; border: 1px solid rgba(176,38,26,0.3); }
+  [data-theme="dark"] .gate-banner.fail { color: #ff9d92; }
+  .gate-banner .sub { font-weight: 400; font-size: 0.8rem; opacity: 0.85; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-bottom: 1.3rem; }
+  .legend button {
+    border-radius: 999px;
+    padding: 0.3rem 0.85rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    border: 1px solid var(--border);
+  }
+  .legend button.active { box-shadow: 0 0 0 2px var(--text); }
+  .legend button.all { background: var(--surface-2); color: var(--text); }
+  .legend button.sev-critical { background: #b0261a; color: #fff; }
+  .legend button.sev-high { background: #b85c00; color: #fff; }
+  .legend button.sev-medium { background: #c99a1e; color: #2b2103; }
+  .legend button.sev-low { background: #2c5f9e; color: #fff; }
+  .legend button.sev-safe { background: #227a3d; color: #fff; }
+
+  .card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    margin-bottom: 1rem;
+    overflow: hidden;
+  }
+  .card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.85rem 1.05rem;
+    border-bottom: 1px solid var(--border);
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+  .name-group { display: flex; align-items: baseline; gap: 0.55rem; }
+  .name { font-weight: 700; font-size: 1rem; }
+  .version { color: var(--text-secondary); font-size: 0.82rem; }
+  .badges { display: flex; align-items: center; gap: 0.5rem; }
+  .badge {
+    border-radius: 999px;
+    padding: 0.22rem 0.75rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+  .badge.sev-critical { background: #b0261a; color: #fff; }
+  .badge.sev-high { background: #b85c00; color: #fff; }
+  .badge.sev-medium { background: #c99a1e; color: #2b2103; }
+  .badge.sev-low { background: #2c5f9e; color: #fff; }
+  .badge.sev-safe { background: #227a3d; color: #fff; }
+  .badge.accepted { background: var(--surface-2); color: var(--text-secondary); border: 1px solid var(--border); }
+  .badge.kev { background: var(--surface-2); color: var(--text-secondary); border: 1px solid var(--border); }
+
+  .tab-bar { display: flex; gap: 0.2rem; padding: 0.55rem 0.7rem 0; }
+  .tab-btn {
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: 7px;
+    padding: 0.4rem 0.7rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+  .tab-btn.active { background: var(--surface-2); color: var(--text); }
+  .tab-panel { padding: 0.9rem 1.1rem 1.1rem; font-size: 0.86rem; line-height: 1.55; }
+  .tab-panel p { margin: 0.3rem 0; }
+  .tab-panel[hidden] { display: none; }
+
+  .accept-box { border-top: 1px solid var(--border); padding: 0.8rem 1.1rem; background: var(--surface-2); }
+  .accept-box .row { margin-top: 0.5rem; }
+  .accept-box input[type="text"] { font-size: 0.8rem; }
+
+  footer.credit { text-align: center; color: var(--text-secondary); font-size: 0.72rem; margin-top: 2rem; }
+</style>
+</head>
+<body data-theme="light">
+
+<aside class="sidebar">
+  <div class="brand"><span class="dot"></span> SecureChain</div>
+
+  <div class="field">
+    <div class="field-label">Project folder</div>
+    <div class="row">
+      <input type="text" id="folderInput" placeholder="Type or browse a project folder" />
+      <button id="browseBtn" title="Browse for a folder">Browse</button>
+    </div>
+    <p class="hint" id="manifestHint"></p>
+  </div>
+
+  <div class="field" id="manifestPickWrap" style="display:none;">
+    <div class="field-label">package.json found</div>
+    <select id="manifestSelect"></select>
+  </div>
+
+  <label class="check-row">
+    <input type="checkbox" id="demoCacheCheck" />
+    Use cached demo data if available, for a fast result with no network calls
+  </label>
+
+  <button class="primary" id="scanBtn" disabled>Scan this folder</button>
+
+  <div id="statRow" class="stat-mini-row" style="display:none;"></div>
+
+  <div class="divider"></div>
+
+  <div class="field">
+    <div class="field-label">Commit message</div>
+    <input type="text" id="commitMsg" value="Update dependencies via SecureChain GUI" />
+  </div>
+  <button id="pushBtn" disabled>Push to GitHub</button>
+  <div id="ciStatusWrap" style="display:none;">
+    <span class="status-pill idle" id="ciStatusPill">Not checked yet</span>
+  </div>
+
+  <div class="hint">
+    Pushing reuses the git credentials already set up on this machine. No
+    separate login is required. Checking the result reads GitHub's public
+    status for this repository, also without a login.
+  </div>
+
+  <div class="divider"></div>
+  <button id="themeToggle">Switch to dark theme</button>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <h1>Dependency risk result</h1>
+  </div>
+
+  <div id="emptyState" class="empty-state">
+    <h2>Select a project folder to begin</h2>
+    <p>Choose a folder that contains a package.json file, then scan it. This
+    runs the same scan pipeline the CI gate uses, so a live scan here reads
+    the same real advisory, exploit, and registry data a push would trigger.</p>
+  </div>
+
+  <div id="resultArea" style="display:none;">
+    <div id="gateBanner"></div>
+    <div id="legend" class="legend"></div>
+    <div id="cards"></div>
+  </div>
+
+  <footer class="credit">SecureChain local preview. The pushed CI run is the result that actually counts.</footer>
+</main>
+
+<script>
+const SEV_ORDER = ["Critical", "High", "Medium", "Low", "Safe"];
+const SEV_SCALE = ["Safe", "Low", "Medium", "High", "Critical"];
+const SEV_CLASS = {Critical: "sev-critical", High: "sev-high", Medium: "sev-medium", Low: "sev-low", Safe: "sev-safe"};
+
+let currentReport = null;
+let currentGate = null;
+let acceptedKeys = [];
+let activeFilter = "all";
+
+const folderInput = document.getElementById("folderInput");
+const manifestHint = document.getElementById("manifestHint");
+const manifestPickWrap = document.getElementById("manifestPickWrap");
+const manifestSelect = document.getElementById("manifestSelect");
+const scanBtn = document.getElementById("scanBtn");
+const pushBtn = document.getElementById("pushBtn");
+const browseBtn = document.getElementById("browseBtn");
+const demoCacheCheck = document.getElementById("demoCacheCheck");
+
+let foundManifests = [];
+
+function updateDemoCacheForSelection() {
+  const chosen = foundManifests.find(m => m.path === manifestSelect.value);
+  const available = Boolean(chosen && chosen.demo_cache_available);
+  demoCacheCheck.checked = available;
+  demoCacheCheck.disabled = !available;
+}
+
+async function checkManifest() {
+  const folder = folderInput.value.trim();
+  manifestPickWrap.style.display = "none";
+  if (!folder) { scanBtn.disabled = true; manifestHint.textContent = ""; return; }
+
+  const res = await fetch("/api/check-manifest?folder=" + encodeURIComponent(folder));
+  const data = await res.json();
+
+  if (!data.folder_exists) {
+    manifestHint.textContent = "That folder was not found.";
+    scanBtn.disabled = true;
+    return;
+  }
+
+  foundManifests = data.manifests || [];
+  if (foundManifests.length === 0) {
+    manifestHint.textContent = "No package.json was found in that folder or its subfolders.";
+    scanBtn.disabled = true;
+    return;
+  }
+
+  manifestHint.textContent = foundManifests.length === 1
+    ? "Found " + foundManifests[0].path + ". Ready to scan."
+    : "Found " + foundManifests.length + " package.json files. Pick one to scan.";
+  scanBtn.disabled = false;
+
+  manifestSelect.innerHTML = "";
+  for (const m of foundManifests) {
+    const opt = document.createElement("option");
+    opt.value = m.path;
+    opt.textContent = m.path;
+    manifestSelect.appendChild(opt);
+  }
+  manifestPickWrap.style.display = foundManifests.length > 1 ? "block" : "none";
+  updateDemoCacheForSelection();
+}
+
+manifestSelect.addEventListener("change", updateDemoCacheForSelection);
+folderInput.addEventListener("input", checkManifest);
+
+browseBtn.addEventListener("click", async () => {
+  const res = await fetch("/api/browse");
+  const data = await res.json();
+  if (data.path) {
+    folderInput.value = data.path;
+    checkManifest();
+  } else if (data.error) {
+    alert(data.error);
+  }
+});
+
+scanBtn.addEventListener("click", async () => {
+  scanBtn.disabled = true;
+  scanBtn.textContent = "Scanning";
+  try {
+    const chosenManifest = foundManifests.length ? (manifestSelect.value || foundManifests[0].path) : "package.json";
+    const res = await fetch("/api/scan", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({folder: folderInput.value.trim(), manifest: chosenManifest, use_demo_cache: demoCacheCheck.checked}),
+    });
+    const data = await res.json();
+    if (data.error) { alert(data.error); return; }
+    currentReport = data.report;
+    currentGate = data.gate;
+    acceptedKeys = data.accepted_keys;
+    renderResult();
+    pushBtn.disabled = false;
+  } finally {
+    scanBtn.disabled = false;
+    scanBtn.textContent = "Scan this folder";
+  }
+});
+
+function renderStatRow() {
+  const s = currentReport.summary;
+  const row = document.getElementById("statRow");
+  row.style.display = "grid";
+  row.innerHTML = "";
+  const tiles = [
+    ["Total", s.total], ["Critical", s.critical], ["High", s.high],
+    ["Medium", s.medium], ["Low", s.low], ["Safe", s.safe],
+  ];
+  for (const [label, value] of tiles) {
+    const div = document.createElement("div");
+    div.className = "stat-mini";
+    div.innerHTML = "<div class=\"n\">" + value + "</div><div class=\"l\">" + label + "</div>";
+    row.appendChild(div);
+  }
+}
+
+function renderGateBanner() {
+  const banner = document.getElementById("gateBanner");
+  const pass = currentGate.exit_code === 0;
+  banner.innerHTML =
+    "<div class=\"gate-banner " + (pass ? "pass" : "fail") + "\">" +
+    "<div>" + (pass ? "Local preview passes" : "Local preview would fail the gate") +
+    "<div class=\"sub\">This reflects the current folder only. The pushed CI run is the result that actually counts.</div></div>" +
+    "<div>" + currentGate.failures.length + " blocking, " + currentGate.warnings.length + " accepted with warning</div>" +
+    "</div>";
+}
+
+function renderLegend() {
+  const legend = document.getElementById("legend");
+  legend.innerHTML = "";
+  const allBtn = document.createElement("button");
+  allBtn.textContent = "ALL";
+  allBtn.className = "all" + (activeFilter === "all" ? " active" : "");
+  allBtn.onclick = () => { activeFilter = "all"; renderCards(); renderLegend(); };
+  legend.appendChild(allBtn);
+  for (const tier of SEV_SCALE) {
+    const btn = document.createElement("button");
+    btn.textContent = tier.toUpperCase();
+    btn.className = SEV_CLASS[tier] + (activeFilter === tier ? " active" : "");
+    btn.onclick = () => { activeFilter = tier; renderCards(); renderLegend(); };
+    legend.appendChild(btn);
+  }
+}
+
+function tierIndex(sev) { return SEV_SCALE.indexOf(sev); }
+
+function cvssLines(dep) {
+  const lines = [];
+  const c = dep.cvss;
+  if (c.score !== null && c.score !== undefined) lines.push("CVSS score " + c.score.toFixed(1));
+  else if (c.severity_label) lines.push("Qualitative severity " + c.severity_label + ". No numeric CVSS score was published.");
+  else lines.push("No CVSS score or CVE record was found for this version.");
+  if (c.cve_id) lines.push("Identifier " + c.cve_id);
+  if (c.fixed_version) lines.push("Fixed in version " + c.fixed_version);
+  const ei = dep.exploit_intel || {};
+  if (ei.status === "ok") {
+    if (ei.epss_score !== null && ei.epss_score !== undefined) {
+      lines.push("EPSS score " + ei.epss_score.toFixed(3) + " with percentile " + Math.round(ei.epss_percentile * 100) + " percent. This is FIRST.org's predicted probability of real world exploitation in the next 30 days.");
+    }
+    if (ei.in_kev) lines.push("Listed on CISA's Known Exploited Vulnerabilities catalog since " + (ei.kev_date_added || "an unspecified date") + ". This means confirmed active exploitation.");
+    else lines.push("Not listed on CISA's Known Exploited Vulnerabilities catalog.");
+  }
+  return lines;
+}
+
+function severityLines(dep) {
+  const lines = [];
+  if (dep.escalated) {
+    lines.push("Base severity is " + dep.base_severity + " from CVSS analysis. A behavioral anomaly was detected, escalating it by one tier to " + dep.severity + ".");
+  } else if (dep.anomaly_flagged) {
+    lines.push("Base severity is " + dep.base_severity + " from CVSS analysis. A behavioral anomaly was also detected, but " + dep.severity + " was already at the top of the scale, so it could not escalate further.");
+  } else {
+    lines.push("Base severity is " + dep.base_severity + " from CVSS analysis and stayed at " + dep.severity + ", since no behavioral anomaly was detected.");
+  }
+  if (dep.cvss.summary) lines.push("How this could be exploited. " + dep.cvss.summary);
+  lines.push("Contextual risk score " + dep.risk_score.toFixed(2) + " from the Random Forest classifier.");
+  const explanation = (dep.shap && dep.shap.classifier && dep.shap.classifier.explanation_text) || "";
+  if (explanation) lines.push(explanation);
+  return lines;
+}
+
+function behavioralLines(dep) {
+  const b = dep.behavioral;
+  const lines = [
+    "Release frequency deviation " + b.release_frequency_deviation.toFixed(2),
+    "Maintainer count " + b.maintainer_count,
+    "Version jump irregularity " + b.version_jump_irregularity.toFixed(2),
+    "Download to age ratio " + b.download_age_ratio.toFixed(2),
+    dep.anomaly_flagged ? "Anomaly detected" : "No anomaly detected",
+  ];
+  const explanation = (dep.shap && dep.shap.anomaly && dep.shap.anomaly.explanation_text) || "";
+  if (explanation) lines.push(explanation);
+  return lines;
+}
+
+function paragraphs(lines) {
+  return lines.filter(Boolean).map(l => "<p>" + escapeHtml(l) + "</p>").join("");
+}
+
+function escapeHtml(s) {
+  const div = document.createElement("div");
+  div.textContent = String(s);
+  return div.innerHTML;
+}
+
+function renderCards() {
+  const container = document.getElementById("cards");
+  container.innerHTML = "";
+  const deps = [...currentReport.dependencies].sort((a, b) => tierIndex(b.severity) - tierIndex(a.severity));
+
+  for (const dep of deps) {
+    if (activeFilter !== "all" && dep.severity !== activeFilter) continue;
+
+    const card = document.createElement("section");
+    card.className = "card";
+
+    const key = dep.package + "@" + dep.version;
+    const isAccepted = acceptedKeys.includes(key);
+    const kevTag = (dep.exploit_intel && dep.exploit_intel.in_kev) ? "<span class=\"badge kev\">KEV LISTED</span>" : "";
+    const acceptedTag = isAccepted ? "<span class=\"badge accepted\">ACCEPTED</span>" : "";
+
+    const head = document.createElement("div");
+    head.className = "card-head";
+    head.innerHTML =
+      "<div class=\"name-group\"><span class=\"name\">" + escapeHtml(dep.package) + "</span><span class=\"version\">" + escapeHtml(dep.version) + "</span></div>" +
+      "<div class=\"badges\">" + acceptedTag + kevTag + "<span class=\"badge " + SEV_CLASS[dep.severity] + "\">" + dep.severity.toUpperCase() + "</span></div>";
+    card.appendChild(head);
+
+    const tabs = [
+      ["recommendation", "Recommendation", paragraphs([dep.recommendation])],
+      ["cvss", "CVSS", paragraphs(cvssLines(dep))],
+      ["severity", "Severity", paragraphs(severityLines(dep))],
+      ["behavioral", "Behavioral", paragraphs(behavioralLines(dep))],
+    ];
+
+    const tabBar = document.createElement("div");
+    tabBar.className = "tab-bar";
+    const panelsWrap = document.createElement("div");
+
+    tabs.forEach((t, i) => {
+      const btn = document.createElement("button");
+      btn.className = "tab-btn" + (i === 0 ? " active" : "");
+      btn.textContent = t[1];
+      btn.onclick = () => {
+        tabBar.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        panelsWrap.querySelectorAll(".tab-panel").forEach(p => p.hidden = p.dataset.tab !== t[0]);
+      };
+      tabBar.appendChild(btn);
+
+      const panel = document.createElement("div");
+      panel.className = "tab-panel";
+      panel.dataset.tab = t[0];
+      panel.hidden = i !== 0;
+      panel.innerHTML = t[2];
+      panelsWrap.appendChild(panel);
+    });
+
+    card.appendChild(tabBar);
+    card.appendChild(panelsWrap);
+
+    if (dep.severity !== "Safe" && !isAccepted) {
+      const box = document.createElement("div");
+      box.className = "accept-box";
+      box.innerHTML =
+        "<div class=\"field-label\">Accept this risk</div>" +
+        "<div class=\"row\">" +
+        "<input type=\"text\" placeholder=\"Reason\" class=\"reasonInput\" />" +
+        "<input type=\"text\" placeholder=\"Your name\" class=\"nameInput\" style=\"max-width:9rem;\" />" +
+        "<button class=\"acceptBtn\">Accept</button>" +
+        "</div>";
+      box.querySelector(".acceptBtn").addEventListener("click", async () => {
+        const reason = box.querySelector(".reasonInput").value.trim();
+        const acceptedBy = box.querySelector(".nameInput").value.trim();
+        if (!reason) { alert("A reason is required."); return; }
+        const res = await fetch("/api/accept", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({folder: folderInput.value.trim(), package: dep.package, version: dep.version, reason, accepted_by: acceptedBy}),
+        });
+        const data = await res.json();
+        if (data.error) { alert(data.error); return; }
+        scanBtn.click();
+      });
+      card.appendChild(box);
+    }
+
+    container.appendChild(card);
+  }
+}
+
+function renderResult() {
+  document.getElementById("emptyState").style.display = "none";
+  document.getElementById("resultArea").style.display = "block";
+  renderStatRow();
+  renderGateBanner();
+  activeFilter = "all";
+  renderLegend();
+  renderCards();
+}
+
+pushBtn.addEventListener("click", async () => {
+  pushBtn.disabled = true;
+  pushBtn.textContent = "Pushing";
+  try {
+    const res = await fetch("/api/push", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({folder: folderInput.value.trim(), message: document.getElementById("commitMsg").value.trim()}),
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      alert("Push did not complete. " + JSON.stringify(data.steps));
+      return;
+    }
+    document.getElementById("ciStatusWrap").style.display = "block";
+    pollCiStatus();
+  } finally {
+    pushBtn.disabled = false;
+    pushBtn.textContent = "Push to GitHub";
+  }
+});
+
+let pollTimer = null;
+async function pollCiStatus() {
+  if (pollTimer) clearTimeout(pollTimer);
+  const pill = document.getElementById("ciStatusPill");
+  pill.textContent = "Checking";
+  pill.className = "status-pill pending";
+  const res = await fetch("/api/ci-status?folder=" + encodeURIComponent(folderInput.value.trim()));
+  const data = await res.json();
+  if (data.status === "success") {
+    pill.textContent = "Checks passed";
+    pill.className = "status-pill success";
+  } else if (data.status === "failure") {
+    pill.textContent = "Checks failed";
+    pill.className = "status-pill failure";
+  } else if (data.status === "pending") {
+    pill.textContent = "Running on GitHub";
+    pill.className = "status-pill pending";
+    pollTimer = setTimeout(pollCiStatus, 8000);
+  } else {
+    pill.textContent = data.message || "Status unavailable";
+    pill.className = "status-pill idle";
+  }
+}
+
+document.getElementById("themeToggle").addEventListener("click", () => {
+  const body = document.body;
+  const next = body.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  body.setAttribute("data-theme", next);
+  document.getElementById("themeToggle").textContent = next === "dark" ? "Switch to light theme" : "Switch to dark theme";
+});
+</script>
+</body>
+</html>

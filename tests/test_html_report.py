@@ -232,6 +232,30 @@ def test_cvss_tab_shows_not_listed_when_not_in_kev():
     assert ">KEV</span>" not in html_output
 
 
+def test_cvss_tab_visually_separates_cvss_facts_from_exploit_intelligence():
+    report = _sample_report(1)
+    report["dependencies"][0]["cvss"] = {
+        "score": 5.6, "cve_id": "CVE-2020-7598", "severity_label": None, "fixed_version": "1.2.6"
+    }
+    report["dependencies"][0]["exploit_intel"] = {
+        "status": "ok", "epss_score": 0.01884, "epss_percentile": 0.77025,
+        "in_kev": False, "kev_date_added": None, "source": "cache",
+    }
+    html_output = render_html_report(report, ignore_file=_NO_IGNORE_FILE)
+
+    assert "Exploit Intelligence" in html_output
+    cvss_score_pos = html_output.index("CVSS score 5.6")
+    subheading_pos = html_output.index("Exploit Intelligence")
+    epss_pos = html_output.index("EPSS score")
+    assert cvss_score_pos < subheading_pos < epss_pos
+
+
+def test_no_subheading_when_there_is_no_exploit_intelligence_to_show():
+    report = _sample_report(1)  # default cvss has no cve_id, no exploit_intel key at all
+    html_output = render_html_report(report, ignore_file=_NO_IGNORE_FILE)
+    assert "Exploit Intelligence" not in html_output
+
+
 def test_missing_exploit_intel_key_does_not_break_rendering():
     report = _sample_report(3)  # _sample_report dependencies carry no "exploit_intel" key at all
     html_output = render_html_report(report, ignore_file=_NO_IGNORE_FILE)

@@ -24,8 +24,12 @@ the detail they want. The CVSS tab also surfaces exploit intelligence (EPSS
 score/percentile from FIRST.org, and CISA KEV catalog membership) when the
 dependency has a CVE-identified advisory - CVSS alone measures potential
 impact, not whether a vulnerability is actually being exploited anywhere, so
-this fills that gap; a KEV-listed dependency also gets a badge next to its
-severity tag, visible without opening any tab. There is deliberately no
+this fills that gap. It stays inside the CVSS tab rather than getting a tab of
+its own (it's more context on the same CVE, not a separate assessment) but is
+set off from the CVSS facts above it by a small "Exploit Intelligence"
+subheading, so the two aren't read as one undifferentiated list. A KEV-listed
+dependency also gets a badge next to its severity tag, visible without
+opening any tab. There is deliberately no
 separate "Explanation" tab: the
 classifier's SHAP explanation lives inside Severity (it explains the risk
 score right next to the tier it produced) and the anomaly detector's SHAP
@@ -238,6 +242,16 @@ h2 {{ font-weight: bold; font-size: 1rem; margin: 0 0 0.6rem; color: var(--text-
 .tab-panel {{ padding: 1rem 1.1rem 1.2rem; }}
 .tab-panel p {{ margin: 0.3rem 0; }}
 .tab-panel .muted {{ color: var(--text-secondary); font-size: 0.85rem; }}
+.tab-subheading {{
+  margin: 0.9rem 0 0.4rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.72rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}}
 
 .chart-container {{ max-width: 560px; margin: 2.5rem 0; }}
 footer {{ margin-top: 2rem; font-size: 0.8rem; color: var(--text-secondary); }}
@@ -302,8 +316,21 @@ def _cvss_lines(dependency: dict) -> list[str]:
         lines.append(f"Identifier {cvss['cve_id']}")
     if cvss.get("fixed_version"):
         lines.append(f"Fixed in version {cvss['fixed_version']}")
-    lines.extend(_exploit_intel_lines(dependency))
     return lines
+
+
+def _render_cvss_tab(dependency: dict) -> str:
+    """Keeps the CVSS facts and the exploit-intelligence facts in the same tab
+    (they're about the same CVE, not a separate assessment) but visually
+    separated by a subheading, rather than one undifferentiated list of
+    paragraphs, so a reader can tell at a glance which line is which.
+    """
+    content = _paragraphs(_cvss_lines(dependency))
+    exploit_lines = _exploit_intel_lines(dependency)
+    if exploit_lines:
+        content += '<p class="tab-subheading">Exploit Intelligence (EPSS / CISA KEV)</p>'
+        content += _paragraphs(exploit_lines)
+    return content
 
 
 def _severity_lines(dependency: dict) -> list[str]:
@@ -381,7 +408,7 @@ def _render_card(dependency: dict, index: int, ignore_store: dict) -> str:
 
     tabs = [
         ("recommendation", "Recommendation", _paragraphs([dependency["recommendation"]])),
-        ("cvss", "CVSS", _paragraphs(_cvss_lines(dependency))),
+        ("cvss", "CVSS", _render_cvss_tab(dependency)),
         ("severity", "Severity", _paragraphs(_severity_lines(dependency))),
         ("behavioral", "Behavioral", _paragraphs(_behavioral_lines(dependency))),
     ]

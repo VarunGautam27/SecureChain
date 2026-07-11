@@ -9,7 +9,7 @@ from securechain.vuln_lookup import (
 from tests.conftest import FakeResponse, FakeSession
 
 
-def _ghsa_payload(vulnerable_range, cvss_score, cve_id, fixed_version, severity="HIGH"):
+def _ghsa_payload(vulnerable_range, cvss_score, cve_id, fixed_version, severity="HIGH", cwes=None):
     return {
         "data": {
             "securityVulnerabilities": {
@@ -20,6 +20,7 @@ def _ghsa_payload(vulnerable_range, cvss_score, cve_id, fixed_version, severity=
                             "severity": severity,
                             "cvss": {"score": cvss_score},
                             "identifiers": [{"type": "CVE", "value": cve_id}],
+                            "cwes": {"nodes": [{"cweId": c} for c in (cwes or [])]},
                         },
                         "vulnerableVersionRange": vulnerable_range,
                         "firstPatchedVersion": {"identifier": fixed_version} if fixed_version else None,
@@ -124,3 +125,63 @@ def test_base_cvss_score_falls_back_to_qualitative_severity():
     result = client.lookup("anything", "1.0.0")
     assert result.status == "lookup_failed"
     assert base_cvss_score(result) is None
+
+
+def test_cwes_are_extracted_from_the_advisory():
+    client = GitHubAdvisoryClient(token="fake-token")
+    client.session = FakeSession(
+        post_result=FakeResponse(
+            _ghsa_payload(">= 5.0.0, < 5.4", 9.8, "CVE-2020-14343", "5.4", cwes=["CWE-20"])
+        )
+    )
+
+    result = client.lookup("pyyaml", "5.3.1", ecosystem="pypi")
+
+    assert result.cwes == ["CWE-20"]
+
+
+def test_missing_cwes_defaults_to_empty_list():
+    client = GitHubAdvisoryClient(token="fake-token")
+    client.session = FakeSession(
+        post_result=FakeResponse(_ghsa_payload(">= 1.0.0, < 1.2.6", 5.6, "CVE-2020-7598", "1.2.6"))
+    )
+
+    result = client.lookup("minimist", "1.2.0")
+
+    assert result.cwes == []
+
+
+def test_pypi_ecosystem_is_sent_as_pip_in_the_graphql_request():
+    captured = {}
+
+    class _CapturingSession(FakeSession):
+        def post(self, *args, **kwargs):
+            captured["variables"] = kwargs["json"]["variables"]
+            return super().post(*args, **kwargs)
+
+    client = GitHubAdvisoryClient(token="fake-token")
+    client.session = _CapturingSession(
+        post_result=FakeResponse({"data": {"securityVulnerabilities": {"nodes": []}}})
+    )
+
+    client.lookup("pyyaml", "5.3.1", ecosystem="pypi")
+
+    assert captured["variables"]["ecosystem"] == "PIP"
+
+
+def test_npm_ecosystem_is_the_default():
+    captured = {}
+
+    class _CapturingSession(FakeSession):
+        def post(self, *args, **kwargs):
+            captured["variables"] = kwargs["json"]["variables"]
+            return super().post(*args, **kwargs)
+
+    client = GitHubAdvisoryClient(token="fake-token")
+    client.session = _CapturingSession(
+        post_result=FakeResponse({"data": {"securityVulnerabilities": {"nodes": []}}})
+    )
+
+    client.lookup("lodash", "4.17.21")
+
+    assert captured["variables"]["ecosystem"] == "NPM"

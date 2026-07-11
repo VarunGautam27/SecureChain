@@ -14,6 +14,7 @@ repositories at a lower, unauthenticated rate limit.
 
 from __future__ import annotations
 
+import json
 import re
 import subprocess
 from pathlib import Path
@@ -23,6 +24,7 @@ import requests
 from flask import Flask, jsonify, request, send_from_directory
 
 from securechain.gate import evaluate_gate
+from securechain.manifest import find_lockfile
 from securechain.pipeline import run_scan
 from securechain.riskignore import accept_risk, load_riskignore
 
@@ -43,13 +45,16 @@ def _ignore_file(folder: str) -> Path:
     return Path(folder) / ".riskignore.json"
 
 
+_MANIFEST_FILE_NAMES = {"package.json", "requirements.txt"}
+
+
 def _find_manifests(folder: str) -> list[str]:
     """Searches the selected folder and every subfolder for files named
-    package.json, so pointing the GUI at a whole project root finds a
-    manifest that sits a few levels down (for example demo/package.json in
-    this repository), not only one at the very top. Common heavy or
-    irrelevant directories are skipped so this stays fast even on a large
-    project.
+    package.json (npm) or requirements.txt (Python), so pointing the GUI at
+    a whole project root finds a manifest that sits a few levels down (for
+    example demo/package.json in this repository), not only one at the very
+    top. Common heavy or irrelevant directories are skipped so this stays
+    fast even on a large project.
     """
     root = Path(folder)
     if not root.is_dir():
@@ -67,7 +72,7 @@ def _find_manifests(folder: str) -> list[str]:
             if entry.is_dir():
                 if entry.name not in _SKIP_DIR_NAMES:
                     stack.append(entry)
-            elif entry.name == "package.json":
+            elif entry.name in _MANIFEST_FILE_NAMES:
                 found.append(str(entry.relative_to(root)))
 
     found.sort(key=lambda p: (p.count("/"), p.count("\\"), p))
@@ -145,10 +150,11 @@ def check_manifest():
     manifests = _find_manifests(folder)
     manifest_info = []
     for relpath in manifests:
-        manifest_dir = (Path(folder) / relpath).parent
+        manifest_path = Path(folder) / relpath
         manifest_info.append({
             "path": relpath,
-            "demo_cache_available": _find_demo_cache(manifest_dir) is not None,
+            "demo_cache_available": _find_demo_cache(manifest_path.parent) is not None,
+            "has_lockfile": find_lockfile(manifest_path) is not None,
         })
 
     return jsonify({
@@ -163,6 +169,7 @@ def scan():
     folder = body.get("folder", "")
     manifest_relpath = body.get("manifest", "package.json")
     use_demo_cache = bool(body.get("use_demo_cache", False))
+    include_transitive = bool(body.get("include_transitive", False))
 
     manifest = Path(folder) / manifest_relpath
     if not manifest.is_file():
@@ -177,7 +184,7 @@ def scan():
             offline = True
 
     try:
-        report = run_scan(manifest, cache_dir=cache_dir, offline=offline)
+        report = run_scan(manifest, cache_dir=cache_dir, offline=offline, include_transitive=include_transitive)
     except Exception as exc:
         return jsonify({"error": f"Scan failed. {exc}"}), 500
 
@@ -208,7 +215,7 @@ def accept():
     package = body.get("package", "")
     version = body.get("version", "")
     reason = body.get("reason", "")
-    accepted_by = body.get("accepted_by", "") or "gui user"
+    accepted_by = body.get("accepted_by", "") or "Warren"
 
     if not package or not version or not reason:
         return jsonify({"error": "Package, version, and reason are all required."}), 400
@@ -223,17 +230,92 @@ def accept():
     return jsonify({"accepted": entry.to_dict()})
 
 
+@app.route("/api/apply-fix", methods=["POST"])
+def apply_fix():
+    """Writes a new version straight into the manifest's dependencies block.
+    This is the one place this application edits your project's own code
+    rather than only recommending a change, so it only ever touches the
+    single dependency entry it was told to, nothing else in the file.
+    """
+    body = request.get_json(force=True) or {}
+    folder = body.get("folder", "")
+    manifest_relpath = body.get("manifest", "package.json")
+    package = body.get("package", "")
+    new_version = body.get("new_version", "")
+
+    if not package or not new_version:
+        return jsonify({"error": "Package and new version are both required."}), 400
+
+    manifest_path = Path(folder) / manifest_relpath
+    if not manifest_path.is_file():
+        return jsonify({"error": f"No manifest found at {manifest_path}"}), 400
+
+    if manifest_path.name == "requirements.txt":
+        return _apply_fix_requirements_txt(manifest_path, package, new_version)
+    return _apply_fix_package_json(manifest_path, package, new_version)
+
+
+def _apply_fix_package_json(manifest_path: Path, package: str, new_version: str):
+    try:
+        data = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return jsonify({"error": f"{manifest_path} is not valid JSON. {exc}"}), 400
+
+    dependencies = data.get("dependencies", {})
+    if package not in dependencies:
+        return jsonify({"error": f"{package} is not listed in {manifest_path}"}), 400
+
+    old_version = dependencies[package]
+    dependencies[package] = new_version
+    manifest_path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+
+    return jsonify({"ok": True, "package": package, "old_version": old_version, "new_version": new_version})
+
+
+def _apply_fix_requirements_txt(manifest_path: Path, package: str, new_version: str):
+    from securechain.manifest import _PIP_OPERATOR_RE, _PIP_OPTION_PREFIXES
+
+    lines = manifest_path.read_text(encoding="utf-8").splitlines()
+    old_version = None
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or stripped.startswith(_PIP_OPTION_PREFIXES):
+            continue
+        body = stripped.split(";", 1)[0].strip()
+        match = _PIP_OPERATOR_RE.search(body)
+        name = body[: match.start()].strip() if match else body.strip()
+        if name.lower() == package.lower():
+            old_version = body[match.start():].strip() if match else None
+            lines[i] = f"{package}=={new_version}"
+            break
+
+    if old_version is None:
+        return jsonify({"error": f"{package} is not listed in {manifest_path}"}), 400
+
+    manifest_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return jsonify({"ok": True, "package": package, "old_version": old_version, "new_version": new_version})
+
+
 @app.route("/api/push", methods=["POST"])
 def push():
     body = request.get_json(force=True) or {}
     folder = body.get("folder", "")
+    manifest_relpath = body.get("manifest", "package.json")
     message = body.get("message", "") or "Update dependencies via SecureChain GUI"
 
     if not Path(folder).is_dir():
         return jsonify({"error": f"{folder} is not a folder on this machine."}), 400
 
+    # Only the manifest this tool actually scanned and .riskignore.json (if
+    # it exists) are staged, never every changed file in the repository.
+    # Anything else you happen to have modified in this folder is left
+    # alone, for you to commit separately in your own way.
+    files_to_add = [manifest_relpath]
+    if (Path(folder) / ".riskignore.json").is_file():
+        files_to_add.append(".riskignore.json")
+
     steps = []
-    add_result = _run_git(folder, ["add", "-A"])
+    add_result = _run_git(folder, ["add", "--", *files_to_add])
     steps.append({"step": "git add", "ok": add_result.returncode == 0, "output": add_result.stderr or add_result.stdout})
     if add_result.returncode != 0:
         return jsonify({"ok": False, "steps": steps})
@@ -245,9 +327,71 @@ def push():
         return jsonify({"ok": False, "steps": steps})
 
     push_result = _run_git(folder, ["push"])
-    steps.append({"step": "git push", "ok": push_result.returncode == 0, "output": push_result.stderr or push_result.stdout})
+    push_output = push_result.stderr or push_result.stdout
+
+    # The first push to a new or changed remote has no upstream branch set
+    # yet, plain git push fails on that alone. Retried once with -u.
+    if push_result.returncode != 0 and "has no upstream branch" in push_output.lower():
+        branch_result = _run_git(folder, ["branch", "--show-current"])
+        branch = branch_result.stdout.strip() or "main"
+        push_result = _run_git(folder, ["push", "-u", "origin", branch])
+        push_output = push_result.stderr or push_result.stdout
+
+    steps.append({"step": "git push", "ok": push_result.returncode == 0, "output": push_output})
 
     return jsonify({"ok": push_result.returncode == 0, "steps": steps})
+
+
+@app.route("/api/remote", methods=["GET"])
+def get_remote():
+    """Reads the current origin remote for the selected folder, if this
+    folder is a git repository with one configured at all.
+    """
+    folder = request.args.get("folder", "")
+    if not Path(folder).is_dir():
+        return jsonify({"url": None})
+
+    is_repo = _run_git(folder, ["rev-parse", "--is-inside-work-tree"])
+    if is_repo.returncode != 0:
+        return jsonify({"url": None, "is_repo": False})
+
+    remote_result = _run_git(folder, ["config", "--get", "remote.origin.url"])
+    url = remote_result.stdout.strip() if remote_result.returncode == 0 else None
+    return jsonify({"url": url, "is_repo": True})
+
+
+@app.route("/api/remote", methods=["POST"])
+def set_remote():
+    """Adds or changes the origin remote for the selected folder. This is
+    the only place this application writes git configuration rather than
+    project files. If the folder is not yet a git repository, git init is
+    run first, since a fresh project would otherwise have nowhere to point
+    a remote at.
+    """
+    body = request.get_json(force=True) or {}
+    folder = body.get("folder", "")
+    url = body.get("url", "").strip()
+
+    if not Path(folder).is_dir():
+        return jsonify({"ok": False, "message": f"{folder} is not a folder on this machine."})
+    if not url:
+        return jsonify({"ok": False, "message": "A repository URL is required."})
+
+    is_repo = _run_git(folder, ["rev-parse", "--is-inside-work-tree"])
+    if is_repo.returncode != 0:
+        init_result = _run_git(folder, ["init"])
+        if init_result.returncode != 0:
+            return jsonify({"ok": False, "message": init_result.stderr or init_result.stdout})
+
+    existing = _run_git(folder, ["config", "--get", "remote.origin.url"])
+    if existing.returncode == 0 and existing.stdout.strip():
+        result = _run_git(folder, ["remote", "set-url", "origin", url])
+    else:
+        result = _run_git(folder, ["remote", "add", "origin", url])
+
+    if result.returncode != 0:
+        return jsonify({"ok": False, "message": result.stderr or result.stdout})
+    return jsonify({"ok": True, "url": url})
 
 
 @app.route("/api/ci-status", methods=["GET"])

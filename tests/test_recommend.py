@@ -62,3 +62,18 @@ def test_missing_exploit_intel_is_backward_compatible():
     recommendation = generate_recommendation("minimist", "Medium", lookup, anomaly_flagged=False)
     assert "URGENT" not in recommendation
     assert "1.2.6" in recommendation
+
+
+def test_transitive_dependency_recommends_overrides_not_a_direct_edit():
+    lookup = LookupResult(status="ok", cve_id="CVE-2023-45857", cvss_score=6.5, fixed_version="1.6.0")
+    recommendation = generate_recommendation("axios", "Medium", lookup, anomaly_flagged=False, is_direct=False)
+    assert "transitive" in recommendation.lower()
+    assert "overrides" in recommendation.lower()
+    assert "1.6.0" in recommendation
+
+
+def test_direct_dependency_still_gets_the_plain_upgrade_instruction():
+    lookup = LookupResult(status="ok", cve_id="CVE-2023-45857", cvss_score=6.5, fixed_version="1.6.0")
+    recommendation = generate_recommendation("axios", "Medium", lookup, anomaly_flagged=False, is_direct=True)
+    assert "transitive" not in recommendation.lower()
+    assert recommendation == "Upgrade axios to version 1.6.0 or later to remediate CVE-2023-45857."

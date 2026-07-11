@@ -1,0 +1,182 @@
+{
+  "_comment": "Curated registry metadata fixtures for demo/requirements.txt, the PyPI counterpart to npm_metadata.json. Maintainer counts are real, parsed on 2026-07-10 from PyPI's actual author_email/maintainer_email fields (deduplicated where the same person appears in both). Release timelines are illustrative synthetic histories, same convention as the npm fixtures, designed to keep all 8 packages' behavioral profile unremarkable so their severity (where non-Safe) comes from CVSS alone, not anomaly escalation.",
+  "pyyaml": {
+    "time": {
+      "created": "2015-01-15T00:00:00.000Z",
+      "modified": "2017-02-09T00:00:00.000Z",
+      "5.1": "2015-01-15T00:00:00.000Z",
+      "5.1.1": "2015-04-22T00:00:00.000Z",
+      "5.1.2": "2015-07-24T00:00:00.000Z",
+      "5.2": "2015-09-08T00:00:00.000Z",
+      "5.3": "2015-12-02T00:00:00.000Z",
+      "5.3.1": "2016-01-03T00:00:00.000Z",
+      "5.4": "2016-04-09T00:00:00.000Z"
+    },
+    "maintainers": [
+      {
+        "name": "xi@resolvent.net"
+      }
+    ],
+    "repository": {
+      "url": "https://github.com/yaml/pyyaml.git"
+    }
+  },
+  "pillow": {
+    "time": {
+      "created": "2015-02-15T00:00:00.000Z",
+      "modified": "2017-01-05T00:00:00.000Z",
+      "8.1.0": "2015-02-15T00:00:00.000Z",
+      "8.1.1": "2015-03-22T00:00:00.000Z",
+      "8.1.2": "2015-06-24T00:00:00.000Z",
+      "8.2.0": "2015-08-08T00:00:00.000Z",
+      "8.3.0": "2015-11-02T00:00:00.000Z",
+      "8.4.0": "2015-12-03T00:00:00.000Z",
+      "9.0.0": "2016-03-09T00:00:00.000Z"
+    },
+    "maintainers": [
+      {
+        "name": "Jeffrey 'Alex' Clark <aclark@aclark.net>"
+      }
+    ],
+    "repository": {
+      "url": "https://github.com/python-pillow/Pillow.git"
+    }
+  },
+  "urllib3": {
+    "time": {
+      "created": "2015-03-15T00:00:00.000Z",
+      "modified": "2017-02-05T00:00:00.000Z",
+      "1.26.9": "2015-03-15T00:00:00.000Z",
+      "1.26.10": "2015-04-22T00:00:00.000Z",
+      "1.26.12": "2015-07-24T00:00:00.000Z",
+      "1.26.13": "2015-09-08T00:00:00.000Z",
+      "1.26.14": "2015-12-02T00:00:00.000Z",
+      "1.26.16": "2016-01-03T00:00:00.000Z",
+      "1.26.17": "2016-04-09T00:00:00.000Z"
+    },
+    "maintainers": [
+      {
+        "name": "Seth Michael Larson <sethmichaellarson@gmail.com>"
+      },
+      {
+        "name": "Quentin Pradet <quentin@pradet.me>"
+      },
+      {
+        "name": "Illia Volochii <illia.volochii@gmail.com>"
+      },
+      {
+        "name": "Andrey Petrov <andrey.petrov@shazow.net>"
+      }
+    ]
+  },
+  "jinja2": {
+    "time": {
+      "created": "2015-04-15T00:00:00.000Z",
+      "modified": "2017-03-05T00:00:00.000Z",
+      "3.0.0": "2015-04-15T00:00:00.000Z",
+      "3.0.1": "2015-05-22T00:00:00.000Z",
+      "3.0.3": "2015-08-24T00:00:00.000Z",
+      "3.1.0": "2015-10-08T00:00:00.000Z",
+      "3.1.1": "2016-01-02T00:00:00.000Z",
+      "3.1.2": "2016-02-03T00:00:00.000Z",
+      "3.1.3": "2016-05-14T00:00:00.000Z"
+    },
+    "maintainers": [
+      {
+        "name": "Pallets <contact@palletsprojects.com>"
+      }
+    ],
+    "repository": {
+      "url": "https://github.com/pallets/jinja.git"
+    }
+  },
+  "certifi": {
+    "time": {
+      "created": "2015-05-15T00:00:00.000Z",
+      "modified": "2017-04-05T00:00:00.000Z",
+      "2023.5.7": "2015-05-15T00:00:00.000Z",
+      "2023.7.22": "2015-08-22T00:00:00.000Z",
+      "2023.11.17": "2015-11-24T00:00:00.000Z",
+      "2024.2.2": "2016-02-14T00:00:00.000Z"
+    },
+    "maintainers": [
+      {
+        "name": "me@kennethreitz.com"
+      }
+    ],
+    "repository": {
+      "url": "https://github.com/certifi/python-certifi.git"
+    }
+  },
+  "idna": {
+    "time": {
+      "created": "2015-06-15T00:00:00.000Z",
+      "modified": "2017-05-05T00:00:00.000Z",
+      "3.3": "2015-06-15T00:00:00.000Z",
+      "3.4": "2015-07-22T00:00:00.000Z",
+      "3.5": "2015-10-24T00:00:00.000Z",
+      "3.6": "2015-12-08T00:00:00.000Z"
+    },
+    "maintainers": [
+      {
+        "name": "Kim Davies <kim+pypi@gumleaf.org>"
+      }
+    ],
+    "repository": {
+      "url": "https://github.com/kjd/idna.git"
+    }
+  },
+  "charset-normalizer": {
+    "time": {
+      "created": "2015-07-15T00:00:00.000Z",
+      "modified": "2017-06-05T00:00:00.000Z",
+      "3.1.0": "2015-07-15T00:00:00.000Z",
+      "3.2.0": "2015-09-22T00:00:00.000Z",
+      "3.3.0": "2015-12-24T00:00:00.000Z",
+      "3.3.2": "2016-03-08T00:00:00.000Z"
+    },
+    "maintainers": [
+      {
+        "name": "\"Ahmed R. TAHRI\" <tahri.ahmed@proton.me>"
+      }
+    ]
+  },
+  "six": {
+    "time": {
+      "created": "2015-08-15T00:00:00.000Z",
+      "modified": "2017-07-05T00:00:00.000Z",
+      "1.14.0": "2015-08-15T00:00:00.000Z",
+      "1.15.0": "2015-11-22T00:00:00.000Z",
+      "1.16.0": "2016-02-24T00:00:00.000Z"
+    },
+    "maintainers": [
+      {
+        "name": "benjamin@python.org"
+      }
+    ],
+    "repository": {
+      "url": "https://github.com/benjaminp/six.git"
+    }
+  },
+  "werkzeug": {
+    "time": {
+      "created": "2015-09-15T00:00:00.000Z",
+      "modified": "2017-08-05T00:00:00.000Z",
+      "2.1.0": "2015-09-15T00:00:00.000Z",
+      "2.1.1": "2015-10-22T00:00:00.000Z",
+      "2.1.2": "2015-12-24T00:00:00.000Z",
+      "2.2.0": "2016-01-08T00:00:00.000Z",
+      "2.2.1": "2016-02-02T00:00:00.000Z",
+      "2.2.2": "2016-03-14T00:00:00.000Z",
+      "2.2.3": "2016-04-19T00:00:00.000Z"
+    },
+    "maintainers": [
+      {
+        "name": "Pallets <contact@palletsprojects.com>"
+      }
+    ],
+    "repository": {
+      "url": "https://github.com/pallets/werkzeug.git"
+    }
+  }
+}

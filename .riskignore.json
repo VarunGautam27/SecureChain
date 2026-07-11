@@ -6,20 +6,6 @@
       "reason": "Safe I see",
       "date": "2026-07-10",
       "accepted_by": "LENONO"
-    },
-    {
-      "package": "node-ipc",
-      "version": "9.2.1",
-      "reason": "This is safe",
-      "date": "2026-07-10",
-      "accepted_by": "Varun"
-    },
-    {
-      "package": "moment",
-      "version": "2.29.1",
-      "reason": "This is safe",
-      "date": "2026-07-10",
-      "accepted_by": "Varun"
     }
   ]
 }

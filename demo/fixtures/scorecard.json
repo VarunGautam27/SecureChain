@@ -1,0 +1,678 @@
+{
+  "_comment": "Real OpenSSF Scorecard data for the demo packages own GitHub repositories, captured on 2026-07-11 via the public api.securityscorecards.dev API. Not every package publishes a discoverable GitHub URL in its registry metadata (commander, colors, urllib3, charset-normalizer have none of the checked fields populated), those simply have no entry here and the report shows not_available for them, not a failed lookup.",
+  "lodash/lodash": {
+    "status": "ok",
+    "score": 7.2,
+    "checks": [
+      {
+        "name": "Binary-Artifacts",
+        "score": 10
+      },
+      {
+        "name": "Branch-Protection",
+        "score": -1
+      },
+      {
+        "name": "CI-Tests",
+        "score": 8
+      },
+      {
+        "name": "CII-Best-Practices",
+        "score": 0
+      },
+      {
+        "name": "Code-Review",
+        "score": 7
+      }
+    ],
+    "repo": "lodash/lodash"
+  },
+  "chalk/chalk": {
+    "status": "ok",
+    "score": 3.8,
+    "checks": [
+      {
+        "name": "Packaging",
+        "score": -1
+      },
+      {
+        "name": "Maintained",
+        "score": 0
+      },
+      {
+        "name": "Dangerous-Workflow",
+        "score": 10
+      },
+      {
+        "name": "Binary-Artifacts",
+        "score": 10
+      },
+      {
+        "name": "Code-Review",
+        "score": 3
+      }
+    ],
+    "repo": "chalk/chalk"
+  },
+  "uuidjs/uuid": {
+    "status": "ok",
+    "score": 4.5,
+    "checks": [
+      {
+        "name": "Maintained",
+        "score": 10
+      },
+      {
+        "name": "Dangerous-Workflow",
+        "score": 0
+      },
+      {
+        "name": "Security-Policy",
+        "score": 0
+      },
+      {
+        "name": "Code-Review",
+        "score": 3
+      },
+      {
+        "name": "Binary-Artifacts",
+        "score": 10
+      }
+    ],
+    "repo": "uuidjs/uuid"
+  },
+  "debug-js/debug": {
+    "status": "ok",
+    "score": 2.6,
+    "checks": [
+      {
+        "name": "Code-Review",
+        "score": 4
+      },
+      {
+        "name": "Pinned-Dependencies",
+        "score": -1
+      },
+      {
+        "name": "Maintained",
+        "score": 0
+      },
+      {
+        "name": "Packaging",
+        "score": -1
+      },
+      {
+        "name": "Binary-Artifacts",
+        "score": 10
+      }
+    ],
+    "repo": "debug-js/debug"
+  },
+  "npm/node-semver": {
+    "status": "ok",
+    "score": 6.6,
+    "checks": [
+      {
+        "name": "Code-Review",
+        "score": 8
+      },
+      {
+        "name": "Maintained",
+        "score": 10
+      },
+      {
+        "name": "Binary-Artifacts",
+        "score": 10
+      },
+      {
+        "name": "Security-Policy",
+        "score": 10
+      },
+      {
+        "name": "Packaging",
+        "score": -1
+      }
+    ],
+    "repo": "npm/node-semver"
+  },
+  "motdotla/dotenv": {
+    "status": "ok",
+    "score": 4.4,
+    "checks": [
+      {
+        "name": "Maintained",
+        "score": 10
+      },
+      {
+        "name": "Security-Policy",
+        "score": 9
+      },
+      {
+        "name": "Binary-Artifacts",
+        "score": 10
+      },
+      {
+        "name": "Dangerous-Workflow",
+        "score": 10
+      },
+      {
+        "name": "Packaging",
+        "score": -1
+      }
+    ],
+    "repo": "motdotla/dotenv"
+  },
+  "yargs/yargs": {
+    "status": "ok",
+    "score": 6.2,
+    "checks": [
+      {
+        "name": "Maintained",
+        "score": 10
+      },
+      {
+        "name": "Dangerous-Workflow",
+        "score": 10
+      },
+      {
+        "name": "Packaging",
+        "score": -1
+      },
+      {
+        "name": "Code-Review",
+        "score": 7
+      },
+      {
+        "name": "Binary-Artifacts",
+        "score": 10
+      }
+    ],
+    "repo": "yargs/yargs"
+  },
+  "alexeyraspopov/picocolors": {
+    "status": "ok",
+    "score": 3.2,
+    "checks": [
+      {
+        "name": "Code-Review",
+        "score": 4
+      },
+      {
+        "name": "Packaging",
+        "score": -1
+      },
+      {
+        "name": "Binary-Artifacts",
+        "score": 10
+      },
+      {
+        "name": "Token-Permissions",
+        "score": 0
+      },
+      {
+        "name": "Maintained",
+        "score": 0
+      }
+    ],
+    "repo": "alexeyraspopov/picocolors"
+  },
+  "minimistjs/minimist": {
+    "status": "ok",
+    "score": 5.3,
+    "checks": [
+      {
+        "name": "Code-Review",
+        "score": 3
+      },
+      {
+        "name": "Packaging",
+        "score": -1
+      },
+      {
+        "name": "Dangerous-Workflow",
+        "score": 10
+      },
+      {
+        "name": "Maintained",
+        "score": 0
+      },
+      {
+        "name": "Binary-Artifacts",
+        "score": 10
+      }
+    ],
+    "repo": "minimistjs/minimist"
+  },
+  "axios/axios": {
+    "status": "ok",
+    "score": 8.1,
+    "checks": [
+      {
+        "name": "Maintained",
+        "score": 10
+      },
+      {
+        "name": "Code-Review",
+        "score": 7
+      },
+      {
+        "name": "Dangerous-Workflow",
+        "score": 10
+      },
+      {
+        "name": "Security-Policy",
+        "score": 10
+      },
+      {
+        "name": "Binary-Artifacts",
+        "score": 10
+      }
+    ],
+    "repo": "axios/axios"
+  },
+  "jonschlinkert/word-wrap": {
+    "status": "ok",
+    "score": 3,
+    "checks": [
+      {
+        "name": "Code-Review",
+        "score": 2
+      },
+      {
+        "name": "Token-Permissions",
+        "score": 0
+      },
+      {
+        "name": "Binary-Artifacts",
+        "score": 10
+      },
+      {
+        "name": "Maintained",
+        "score": 0
+      },
+      {
+        "name": "Dangerous-Workflow",
+        "score": 10
+      }
+    ],
+    "repo": "jonschlinkert/word-wrap"
+  },
+  "moment/moment": {
+    "status": "ok",
+    "score": 3.1,
+    "checks": [
+      {
+        "name": "Code-Review",
+        "score": 0
+      },
+      {
+        "name": "Maintained",
+        "score": 0
+      },
+      {
+        "name": "Dangerous-Workflow",
+        "score": 10
+      },
+      {
+        "name": "Packaging",
+        "score": -1
+      },
+      {
+        "name": "Token-Permissions",
+        "score": 0
+      }
+    ],
+    "repo": "moment/moment"
+  },
+  "chalk/ansi-regex": {
+    "status": "ok",
+    "score": 3.8,
+    "checks": [
+      {
+        "name": "Code-Review",
+        "score": 3
+      },
+      {
+        "name": "Maintained",
+        "score": 0
+      },
+      {
+        "name": "Pinned-Dependencies",
+        "score": 0
+      },
+      {
+        "name": "Packaging",
+        "score": -1
+      },
+      {
+        "name": "Dangerous-Workflow",
+        "score": 10
+      }
+    ],
+    "repo": "chalk/ansi-regex"
+  },
+  "gulpjs/glob-parent": {
+    "status": "ok",
+    "score": 3.7,
+    "checks": [
+      {
+        "name": "Maintained",
+        "score": 0
+      },
+      {
+        "name": "Dangerous-Workflow",
+        "score": 10
+      },
+      {
+        "name": "Code-Review",
+        "score": 2
+      },
+      {
+        "name": "Binary-Artifacts",
+        "score": 10
+      },
+      {
+        "name": "Packaging",
+        "score": -1
+      }
+    ],
+    "repo": "gulpjs/glob-parent"
+  },
+  "json5/json5": {
+    "status": "ok",
+    "score": 3.8,
+    "checks": [
+      {
+        "name": "Code-Review",
+        "score": 2
+      },
+      {
+        "name": "Dangerous-Workflow",
+        "score": -1
+      },
+      {
+        "name": "Packaging",
+        "score": -1
+      },
+      {
+        "name": "Maintained",
+        "score": 0
+      },
+      {
+        "name": "Token-Permissions",
+        "score": -1
+      }
+    ],
+    "repo": "json5/json5"
+  },
+  "isaacs/node-tar": {
+    "status": "ok",
+    "score": 6.2,
+    "checks": [
+      {
+        "name": "Maintained",
+        "score": 10
+      },
+      {
+        "name": "Code-Review",
+        "score": 0
+      },
+      {
+        "name": "Dangerous-Workflow",
+        "score": 10
+      },
+      {
+        "name": "Packaging",
+        "score": -1
+      },
+      {
+        "name": "Token-Permissions",
+        "score": 10
+      }
+    ],
+    "repo": "isaacs/node-tar"
+  },
+  "Leonidas-from-XIV/node-xml2js": {
+    "status": "ok",
+    "score": 3.6,
+    "checks": [
+      {
+        "name": "Token-Permissions",
+        "score": -1
+      },
+      {
+        "name": "Packaging",
+        "score": -1
+      },
+      {
+        "name": "Maintained",
+        "score": 2
+      },
+      {
+        "name": "Dangerous-Workflow",
+        "score": -1
+      },
+      {
+        "name": "Binary-Artifacts",
+        "score": 10
+      }
+    ],
+    "repo": "Leonidas-from-XIV/node-xml2js"
+  },
+  "RIAEvangelist/node-ipc": {
+    "status": "ok",
+    "score": 4,
+    "checks": [
+      {
+        "name": "Dangerous-Workflow",
+        "score": 10
+      },
+      {
+        "name": "Security-Policy",
+        "score": 4
+      },
+      {
+        "name": "Token-Permissions",
+        "score": 0
+      },
+      {
+        "name": "Maintained",
+        "score": 7
+      },
+      {
+        "name": "Packaging",
+        "score": -1
+      }
+    ],
+    "repo": "RIAEvangelist/node-ipc"
+  },
+  "yaml/pyyaml": {
+    "status": "ok",
+    "score": 5.1,
+    "checks": [
+      {
+        "name": "Maintained",
+        "score": 2
+      },
+      {
+        "name": "Security-Policy",
+        "score": 10
+      },
+      {
+        "name": "Code-Review",
+        "score": 2
+      },
+      {
+        "name": "Packaging",
+        "score": -1
+      },
+      {
+        "name": "Dangerous-Workflow",
+        "score": 10
+      }
+    ],
+    "repo": "yaml/pyyaml"
+  },
+  "python-pillow/Pillow": {
+    "status": "ok",
+    "score": 8.2,
+    "checks": [
+      {
+        "name": "Code-Review",
+        "score": 10
+      },
+      {
+        "name": "Maintained",
+        "score": 10
+      },
+      {
+        "name": "Dangerous-Workflow",
+        "score": 10
+      },
+      {
+        "name": "Security-Policy",
+        "score": 10
+      },
+      {
+        "name": "Token-Permissions",
+        "score": 10
+      }
+    ],
+    "repo": "python-pillow/Pillow"
+  },
+  "pallets/jinja": {
+    "status": "ok",
+    "score": 5.9,
+    "checks": [
+      {
+        "name": "Maintained",
+        "score": 5
+      },
+      {
+        "name": "Dangerous-Workflow",
+        "score": 10
+      },
+      {
+        "name": "Code-Review",
+        "score": 0
+      },
+      {
+        "name": "Binary-Artifacts",
+        "score": 10
+      },
+      {
+        "name": "Token-Permissions",
+        "score": 0
+      }
+    ],
+    "repo": "pallets/jinja"
+  },
+  "certifi/python-certifi": {
+    "status": "ok",
+    "score": 6,
+    "checks": [
+      {
+        "name": "Maintained",
+        "score": 9
+      },
+      {
+        "name": "Code-Review",
+        "score": 0
+      },
+      {
+        "name": "Binary-Artifacts",
+        "score": 10
+      },
+      {
+        "name": "Dangerous-Workflow",
+        "score": 10
+      },
+      {
+        "name": "Token-Permissions",
+        "score": 10
+      }
+    ],
+    "repo": "certifi/python-certifi"
+  },
+  "kjd/idna": {
+    "status": "ok",
+    "score": 8.8,
+    "checks": [
+      {
+        "name": "Maintained",
+        "score": 10
+      },
+      {
+        "name": "Binary-Artifacts",
+        "score": 10
+      },
+      {
+        "name": "Token-Permissions",
+        "score": 10
+      },
+      {
+        "name": "Security-Policy",
+        "score": 10
+      },
+      {
+        "name": "Dependency-Update-Tool",
+        "score": 10
+      }
+    ],
+    "repo": "kjd/idna"
+  },
+  "benjaminp/six": {
+    "status": "ok",
+    "score": 3.7,
+    "checks": [
+      {
+        "name": "Code-Review",
+        "score": 2
+      },
+      {
+        "name": "Binary-Artifacts",
+        "score": 10
+      },
+      {
+        "name": "Maintained",
+        "score": 0
+      },
+      {
+        "name": "Dangerous-Workflow",
+        "score": 10
+      },
+      {
+        "name": "Pinned-Dependencies",
+        "score": 0
+      }
+    ],
+    "repo": "benjaminp/six"
+  },
+  "pallets/werkzeug": {
+    "status": "ok",
+    "score": 6.0,
+    "checks": [
+      {
+        "name": "Code-Review",
+        "score": 0
+      },
+      {
+        "name": "Maintained",
+        "score": 10
+      },
+      {
+        "name": "Token-Permissions",
+        "score": 10
+      },
+      {
+        "name": "Dangerous-Workflow",
+        "score": 10
+      },
+      {
+        "name": "CII-Best-Practices",
+        "score": 0
+      }
+    ],
+    "repo": "pallets/werkzeug"
+  }
+}

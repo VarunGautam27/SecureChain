@@ -242,6 +242,23 @@
   .tab-panel { padding: 0.9rem 1.1rem 1.1rem; font-size: 0.86rem; line-height: 1.55; }
   .tab-panel p { margin: 0.3rem 0; }
   .tab-panel[hidden] { display: none; }
+  .tab-subheading {
+    margin: 0.9rem 0 0.4rem;
+    padding-top: 0.7rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+  }
+  .applyFixBtn {
+    margin-top: 0.5rem;
+    background: var(--accent);
+    color: var(--accent-text);
+    border-color: var(--accent);
+  }
+  .applyFixBtn:hover { filter: brightness(1.05); }
 
   .accept-box { border-top: 1px solid var(--border); padding: 0.8rem 1.1rem; background: var(--surface-2); }
   .accept-box .row { margin-top: 0.5rem; }
@@ -274,11 +291,25 @@
     Use cached demo data if available, for a fast result with no network calls
   </label>
 
+  <label class="check-row">
+    <input type="checkbox" id="transitiveCheck" disabled />
+    Also scan transitive dependencies (needs a package-lock.json)
+  </label>
+
   <button class="primary" id="scanBtn" disabled>Scan this folder</button>
 
   <div id="statRow" class="stat-mini-row" style="display:none;"></div>
 
   <div class="divider"></div>
+
+  <div class="field">
+    <div class="field-label">Remote repository</div>
+    <div class="row">
+      <input type="text" id="remoteInput" placeholder="https://github.com/owner/repository.git" />
+      <button id="setRemoteBtn">Set</button>
+    </div>
+    <p class="hint" id="remoteHint">Select a folder to see its current remote.</p>
+  </div>
 
   <div class="field">
     <div class="field-label">Commit message</div>
@@ -339,14 +370,69 @@ const scanBtn = document.getElementById("scanBtn");
 const pushBtn = document.getElementById("pushBtn");
 const browseBtn = document.getElementById("browseBtn");
 const demoCacheCheck = document.getElementById("demoCacheCheck");
+const transitiveCheck = document.getElementById("transitiveCheck");
+const remoteInput = document.getElementById("remoteInput");
+const remoteHint = document.getElementById("remoteHint");
+const setRemoteBtn = document.getElementById("setRemoteBtn");
+
+async function refreshRemoteInfo() {
+  const folder = folderInput.value.trim();
+  if (!folder) { remoteHint.textContent = "Select a folder to see its current remote."; return; }
+
+  const res = await fetch("/api/remote?folder=" + encodeURIComponent(folder));
+  const data = await res.json();
+
+  if (data.is_repo === false) {
+    remoteHint.textContent = "This folder is not a git repository yet. Setting a remote here will run git init first.";
+    remoteInput.value = "";
+    return;
+  }
+  if (data.url) {
+    remoteHint.textContent = "Currently pushes to " + data.url;
+    remoteInput.value = data.url;
+  } else {
+    remoteHint.textContent = "No remote configured yet for this folder.";
+    remoteInput.value = "";
+  }
+}
+
+setRemoteBtn.addEventListener("click", async () => {
+  const folder = folderInput.value.trim();
+  const url = remoteInput.value.trim();
+  if (!folder) { alert("Select a folder first."); return; }
+  if (!url) { alert("Enter a repository URL first."); return; }
+
+  setRemoteBtn.disabled = true;
+  try {
+    const res = await fetch("/api/remote", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({folder, url}),
+    });
+    const data = await res.json();
+    if (!data.ok) { alert(data.message || "Could not set the remote."); return; }
+    await refreshRemoteInfo();
+  } finally {
+    setRemoteBtn.disabled = false;
+  }
+});
 
 let foundManifests = [];
 
+function currentManifestInfo() {
+  if (!foundManifests.length) return null;
+  return foundManifests.find(m => m.path === manifestSelect.value) || foundManifests[0];
+}
+
 function updateDemoCacheForSelection() {
-  const chosen = foundManifests.find(m => m.path === manifestSelect.value);
+  const chosen = currentManifestInfo();
   const available = Boolean(chosen && chosen.demo_cache_available);
   demoCacheCheck.checked = available;
   demoCacheCheck.disabled = !available;
+
+  const hasLockfile = Boolean(chosen && chosen.has_lockfile);
+  transitiveCheck.disabled = !hasLockfile;
+  if (!hasLockfile) transitiveCheck.checked = false;
 }
 
 async function checkManifest() {
@@ -388,6 +474,7 @@ async function checkManifest() {
 
 manifestSelect.addEventListener("change", updateDemoCacheForSelection);
 folderInput.addEventListener("input", checkManifest);
+folderInput.addEventListener("input", refreshRemoteInfo);
 
 browseBtn.addEventListener("click", async () => {
   const res = await fetch("/api/browse");
@@ -395,6 +482,7 @@ browseBtn.addEventListener("click", async () => {
   if (data.path) {
     folderInput.value = data.path;
     checkManifest();
+    refreshRemoteInfo();
   } else if (data.error) {
     alert(data.error);
   }
@@ -408,7 +496,12 @@ scanBtn.addEventListener("click", async () => {
     const res = await fetch("/api/scan", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({folder: folderInput.value.trim(), manifest: chosenManifest, use_demo_cache: demoCacheCheck.checked}),
+      body: JSON.stringify({
+        folder: folderInput.value.trim(),
+        manifest: chosenManifest,
+        use_demo_cache: demoCacheCheck.checked,
+        include_transitive: transitiveCheck.checked,
+      }),
     });
     const data = await res.json();
     if (data.error) { alert(data.error); return; }
@@ -477,16 +570,31 @@ function cvssLines(dep) {
   else if (c.severity_label) lines.push("Qualitative severity " + c.severity_label + ". No numeric CVSS score was published.");
   else lines.push("No CVSS score or CVE record was found for this version.");
   if (c.cve_id) lines.push("Identifier " + c.cve_id);
+  if (c.cwes && c.cwes.length) lines.push("Weakness category: " + c.cwes.join(", "));
   if (c.fixed_version) lines.push("Fixed in version " + c.fixed_version);
-  const ei = dep.exploit_intel || {};
-  if (ei.status === "ok") {
-    if (ei.epss_score !== null && ei.epss_score !== undefined) {
-      lines.push("EPSS score " + ei.epss_score.toFixed(3) + " with percentile " + Math.round(ei.epss_percentile * 100) + " percent. This is FIRST.org's predicted probability of real world exploitation in the next 30 days.");
-    }
-    if (ei.in_kev) lines.push("Listed on CISA's Known Exploited Vulnerabilities catalog since " + (ei.kev_date_added || "an unspecified date") + ". This means confirmed active exploitation.");
-    else lines.push("Not listed on CISA's Known Exploited Vulnerabilities catalog.");
-  }
   return lines;
+}
+
+function exploitIntelLines(dep) {
+  const ei = dep.exploit_intel || {};
+  if (ei.status !== "ok") return [];
+  const lines = [];
+  if (ei.epss_score !== null && ei.epss_score !== undefined) {
+    lines.push("EPSS score " + ei.epss_score.toFixed(3) + " with percentile " + Math.round(ei.epss_percentile * 100) + " percent. This is FIRST.org's predicted probability of real world exploitation in the next 30 days.");
+  }
+  if (ei.in_kev) lines.push("Listed on CISA's Known Exploited Vulnerabilities catalog since " + (ei.kev_date_added || "an unspecified date") + ". This means confirmed active exploitation.");
+  else lines.push("Not listed on CISA's Known Exploited Vulnerabilities catalog.");
+  return lines;
+}
+
+function renderCvssTab(dep) {
+  let html = paragraphs(cvssLines(dep));
+  const exploitLines = exploitIntelLines(dep);
+  if (exploitLines.length) {
+    html += "<p class=\"tab-subheading\">Exploit Intelligence (EPSS / CISA KEV)</p>";
+    html += paragraphs(exploitLines);
+  }
+  return html;
 }
 
 function severityLines(dep) {
@@ -519,6 +627,31 @@ function behavioralLines(dep) {
   return lines;
 }
 
+function scorecardLines(dep) {
+  const sc = dep.scorecard || {};
+  if (sc.status !== "ok" || sc.score === null || sc.score === undefined) return [];
+  const lines = [
+    "Overall score for " + sc.repo + ": " + sc.score.toFixed(1) + " out of 10, a measure of the " +
+    "project's own repository health (code review, maintenance, branch protection), not of this " +
+    "specific pinned version."
+  ];
+  (sc.checks || []).forEach(c => {
+    if (c.score === -1) lines.push(c.name + ": not applicable to this project.");
+    else if (typeof c.score === "number") lines.push(c.name + ": " + c.score + " out of 10.");
+  });
+  return lines;
+}
+
+function renderBehavioralTab(dep) {
+  let html = paragraphs(behavioralLines(dep));
+  const scLines = scorecardLines(dep);
+  if (scLines.length) {
+    html += "<p class=\"tab-subheading\">OpenSSF Scorecard</p>";
+    html += paragraphs(scLines);
+  }
+  return html;
+}
+
 function paragraphs(lines) {
   return lines.filter(Boolean).map(l => "<p>" + escapeHtml(l) + "</p>").join("");
 }
@@ -544,19 +677,26 @@ function renderCards() {
     const isAccepted = acceptedKeys.includes(key);
     const kevTag = (dep.exploit_intel && dep.exploit_intel.in_kev) ? "<span class=\"badge kev\">KEV LISTED</span>" : "";
     const acceptedTag = isAccepted ? "<span class=\"badge accepted\">ACCEPTED</span>" : "";
+    const transitiveTag = dep.is_direct === false ? "<span class=\"badge accepted\">TRANSITIVE</span>" : "";
 
     const head = document.createElement("div");
     head.className = "card-head";
     head.innerHTML =
-      "<div class=\"name-group\"><span class=\"name\">" + escapeHtml(dep.package) + "</span><span class=\"version\">" + escapeHtml(dep.version) + "</span></div>" +
+      "<div class=\"name-group\"><span class=\"name\">" + escapeHtml(dep.package) + "</span><span class=\"version\">" + escapeHtml(dep.version) + "</span><span class=\"badge accepted\">" + escapeHtml((dep.ecosystem || "npm").toUpperCase()) + "</span>" + transitiveTag + "</div>" +
       "<div class=\"badges\">" + acceptedTag + kevTag + "<span class=\"badge " + SEV_CLASS[dep.severity] + "\">" + dep.severity.toUpperCase() + "</span></div>";
     card.appendChild(head);
 
+    const fixedVersion = dep.cvss && dep.cvss.fixed_version;
+    let recommendationHtml = paragraphs([dep.recommendation]);
+    if (fixedVersion && dep.severity !== "Safe") {
+      recommendationHtml += "<button class=\"applyFixBtn\">Apply upgrade to " + escapeHtml(fixedVersion) + "</button>";
+    }
+
     const tabs = [
-      ["recommendation", "Recommendation", paragraphs([dep.recommendation])],
-      ["cvss", "CVSS", paragraphs(cvssLines(dep))],
+      ["recommendation", "Recommendation", recommendationHtml],
+      ["cvss", "CVSS", renderCvssTab(dep)],
       ["severity", "Severity", paragraphs(severityLines(dep))],
-      ["behavioral", "Behavioral", paragraphs(behavioralLines(dep))],
+      ["behavioral", "Behavioral", renderBehavioralTab(dep)],
     ];
 
     const tabBar = document.createElement("div");
@@ -585,6 +725,36 @@ function renderCards() {
     card.appendChild(tabBar);
     card.appendChild(panelsWrap);
 
+    const applyFixBtn = panelsWrap.querySelector(".applyFixBtn");
+    if (applyFixBtn) {
+      applyFixBtn.addEventListener("click", async () => {
+        const confirmed = confirm(
+          "Upgrade " + dep.package + " from " + dep.version + " to " + fixedVersion + "?\n\n" +
+          "This resolves the known security issue at this version. It is not a guarantee " +
+          "that your application still works correctly with it. Test your application " +
+          "before pushing this change."
+        );
+        if (!confirmed) return;
+
+        applyFixBtn.disabled = true;
+        applyFixBtn.textContent = "Applying";
+        try {
+          const chosenManifest = foundManifests.length ? (manifestSelect.value || foundManifests[0].path) : "package.json";
+          const res = await fetch("/api/apply-fix", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({folder: folderInput.value.trim(), manifest: chosenManifest, package: dep.package, new_version: fixedVersion}),
+          });
+          const data = await res.json();
+          if (data.error) { alert(data.error); return; }
+          scanBtn.click();
+        } finally {
+          applyFixBtn.disabled = false;
+          applyFixBtn.textContent = "Apply upgrade to " + fixedVersion;
+        }
+      });
+    }
+
     if (dep.severity !== "Safe" && !isAccepted) {
       const box = document.createElement("div");
       box.className = "accept-box";
@@ -592,7 +762,7 @@ function renderCards() {
         "<div class=\"field-label\">Accept this risk</div>" +
         "<div class=\"row\">" +
         "<input type=\"text\" placeholder=\"Reason\" class=\"reasonInput\" />" +
-        "<input type=\"text\" placeholder=\"Your name\" class=\"nameInput\" style=\"max-width:9rem;\" />" +
+        "<input type=\"text\" placeholder=\"Your name\" value=\"Warren\" class=\"nameInput\" style=\"max-width:9rem;\" />" +
         "<button class=\"acceptBtn\">Accept</button>" +
         "</div>";
       box.querySelector(".acceptBtn").addEventListener("click", async () => {
@@ -670,7 +840,11 @@ pushBtn.addEventListener("click", async () => {
     const res = await fetch("/api/push", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({folder: folderInput.value.trim(), message: document.getElementById("commitMsg").value.trim()}),
+      body: JSON.stringify({
+        folder: folderInput.value.trim(),
+        manifest: foundManifests.length ? (manifestSelect.value || foundManifests[0].path) : "package.json",
+        message: document.getElementById("commitMsg").value.trim(),
+      }),
     });
     const data = await res.json();
     renderPushResult(data);

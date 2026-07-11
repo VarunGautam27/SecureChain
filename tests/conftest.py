@@ -74,13 +74,22 @@ def ensure_models_trained():
 
 @pytest.fixture
 def demo_manifest_path() -> Path:
-    """A private, test-owned copy of the original 15-dependency vulnerable
+    """A private, test-owned copy of the original 20-dependency vulnerable
     manifest (tests/fixtures/manifest.json) - deliberately NOT demo/package.json,
     since that file is meant to be edited by hand as part of the README's manual
     exercise. Tests must stay stable regardless of what state the user has left
     demo/package.json in.
     """
     return TEST_FIXTURES_DIR / "manifest.json"
+
+
+@pytest.fixture
+def demo_pypi_manifest_path() -> Path:
+    """A private, test-owned copy of demo/requirements.txt, the PyPI counterpart
+    to demo_manifest_path above, same reasoning: never read the user-editable
+    demo/ copy directly from a test.
+    """
+    return TEST_FIXTURES_DIR / "requirements.txt"
 
 
 @pytest.fixture

@@ -314,6 +314,8 @@ def _cvss_lines(dependency: dict) -> list[str]:
         lines.append("No CVSS score or CVE record was found for this version.")
     if cvss.get("cve_id"):
         lines.append(f"Identifier {cvss['cve_id']}")
+    if cvss.get("cwes"):
+        lines.append(f"Weakness category: {', '.join(cvss['cwes'])}")
     if cvss.get("fixed_version"):
         lines.append(f"Fixed in version {cvss['fixed_version']}")
     return lines
@@ -371,10 +373,11 @@ def _severity_lines(dependency: dict) -> list[str]:
 
 
 def _behavioral_lines(dependency: dict) -> list[str]:
-    """Behavioral tab content: the 4 raw features, the anomaly flag, and the SHAP
-    explanation of what made the Isolation Forest consider this normal or
-    suspicious - folded in here rather than a separate tab, since the numbers on
-    their own don't say why they matter.
+    """The 4 raw features, the anomaly flag, and the SHAP explanation of what
+    made the Isolation Forest consider this normal or suspicious. Scorecard
+    is deliberately not mixed in here, see _scorecard_lines and
+    _render_behavioral_tab below, it's a separate data source describing the
+    project's own repository health, not this pinned release's behavior.
     """
     behavioral = dependency["behavioral"]
     anomaly_explanation = dependency.get("shap", {}).get("anomaly", {}).get("explanation_text", "")
@@ -386,6 +389,44 @@ def _behavioral_lines(dependency: dict) -> list[str]:
         "Anomaly detected" if dependency["anomaly_flagged"] else "No anomaly detected",
         anomaly_explanation,
     ]
+
+
+def _scorecard_lines(dependency: dict) -> list[str]:
+    """Every OpenSSF Scorecard check actually captured for this dependency's
+    own repository, not only the single worst one, so a reader can see the
+    full picture instead of one cherry picked number.
+    """
+    scorecard = dependency.get("scorecard") or {}
+    if scorecard.get("status") != "ok" or scorecard.get("score") is None:
+        return []
+
+    lines = [
+        f"Overall score for {scorecard.get('repo')}: {scorecard['score']:.1f} out of 10, a measure "
+        "of the project's own repository health (code review, maintenance, branch protection), "
+        "not of this specific pinned version."
+    ]
+    for check in scorecard.get("checks") or []:
+        score = check.get("score")
+        if score == -1:
+            lines.append(f"{check.get('name')}: not applicable to this project.")
+        elif isinstance(score, (int, float)):
+            lines.append(f"{check.get('name')}: {score} out of 10.")
+    return lines
+
+
+def _render_behavioral_tab(dependency: dict) -> str:
+    """Two visually separated sections, mirroring _render_cvss_tab: the
+    Isolation Forest's own behavioral analysis, then, only when Scorecard
+    data exists, a clearly labeled subheading before it, since the two
+    describe different things and reading them run together as one
+    undifferentiated paragraph makes that easy to miss.
+    """
+    content = _paragraphs(_behavioral_lines(dependency))
+    scorecard_lines = _scorecard_lines(dependency)
+    if scorecard_lines:
+        content += '<p class="tab-subheading">OpenSSF Scorecard</p>'
+        content += _paragraphs(scorecard_lines)
+    return content
 
 
 def _render_severity_scale() -> str:
@@ -415,7 +456,7 @@ def _render_card(dependency: dict, index: int, ignore_store: dict) -> str:
         ("recommendation", "Recommendation", _paragraphs([dependency["recommendation"]])),
         ("cvss", "CVSS", _render_cvss_tab(dependency)),
         ("severity", "Severity", _paragraphs(_severity_lines(dependency))),
-        ("behavioral", "Behavioral", _paragraphs(_behavioral_lines(dependency))),
+        ("behavioral", "Behavioral", _render_behavioral_tab(dependency)),
     ]
 
     tab_buttons = "".join(
@@ -450,6 +491,8 @@ def _render_card(dependency: dict, index: int, ignore_store: dict) -> str:
         <div class="dep-name-group">
           <span class="dep-name">{_esc(dependency['package'])}</span>
           <span class="dep-version">{_esc(dependency['version'])}</span>
+          <span class="accepted-tag">{_esc(dependency.get('ecosystem', 'npm').upper())}</span>
+          {'<span class="accepted-tag">TRANSITIVE</span>' if dependency.get('is_direct') is False else ''}
         </div>
         <div class="dep-badges">
           {accepted_tag}

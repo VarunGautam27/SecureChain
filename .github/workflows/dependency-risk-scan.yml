@@ -77,17 +77,7 @@ jobs:
             --ignore-file .riskignore.ci-demo.json --accepted-by "ci-demo"
           securechain accept axios@1.5.0 --reason "CI demo: accepted pending upstream upgrade" \
             --ignore-file .riskignore.ci-demo.json --accepted-by "ci-demo"
-          securechain accept word-wrap@1.2.3 --reason "CI demo: accepted pending upstream upgrade" \
-            --ignore-file .riskignore.ci-demo.json --accepted-by "ci-demo"
           securechain accept moment@2.29.1 --reason "CI demo: accepted pending upstream upgrade" \
-            --ignore-file .riskignore.ci-demo.json --accepted-by "ci-demo"
-          securechain accept ansi-regex@5.0.0 --reason "CI demo: accepted pending upstream upgrade" \
-            --ignore-file .riskignore.ci-demo.json --accepted-by "ci-demo"
-          securechain accept glob-parent@5.1.1 --reason "CI demo: accepted pending upstream upgrade" \
-            --ignore-file .riskignore.ci-demo.json --accepted-by "ci-demo"
-          securechain accept json5@2.2.1 --reason "CI demo: accepted pending upstream upgrade" \
-            --ignore-file .riskignore.ci-demo.json --accepted-by "ci-demo"
-          securechain accept tar@6.1.0 --reason "CI demo: accepted pending upstream upgrade" \
             --ignore-file .riskignore.ci-demo.json --accepted-by "ci-demo"
           securechain accept xml2js@0.4.19 --reason "CI demo: accepted pending upstream upgrade" \
             --ignore-file .riskignore.ci-demo.json --accepted-by "ci-demo"

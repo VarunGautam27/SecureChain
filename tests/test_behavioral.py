@@ -1,4 +1,4 @@
-from securechain.behavioral import CachedBehavioralClient, compute_behavioral_features
+from securechain.behavioral import CachedBehavioralClient, compute_behavioral_features, normalize_pypi_metadata
 
 
 class _FakeBehavioralClient(CachedBehavioralClient):
@@ -6,10 +6,10 @@ class _FakeBehavioralClient(CachedBehavioralClient):
         self._metadata = metadata
         self._downloads = downloads
 
-    def fetch_metadata(self, package: str):
+    def fetch_metadata(self, package: str, ecosystem: str = "npm"):
         return self._metadata
 
-    def fetch_downloads(self, package: str):
+    def fetch_downloads(self, package: str, ecosystem: str = "npm"):
         return self._downloads
 
 
@@ -99,3 +99,49 @@ def test_failed_metadata_fetch_returns_failed_status():
     client = _FakeBehavioralClient(metadata=None, downloads=None)
     features = compute_behavioral_features("pkg", client)
     assert features.status == "lookup_failed"
+
+
+def test_normalize_pypi_metadata_deduplicates_same_person_in_both_email_fields():
+    raw = {
+        "info": {
+            "author_email": '"Ahmed R. TAHRI" <tahri.ahmed@proton.me>',
+            "maintainer_email": '"Ahmed R. TAHRI" <tahri.ahmed@proton.me>',
+        },
+        "releases": {},
+    }
+    normalized = normalize_pypi_metadata(raw)
+    assert len(normalized["maintainers"]) == 1
+
+
+def test_normalize_pypi_metadata_counts_distinct_people_across_both_fields():
+    raw = {
+        "info": {
+            "author_email": "Andrey Petrov <andrey@example.com>",
+            "maintainer_email": "Seth Larson <seth@example.com>, Quentin Pradet <quentin@example.com>",
+        },
+        "releases": {},
+    }
+    normalized = normalize_pypi_metadata(raw)
+    assert len(normalized["maintainers"]) == 3
+
+
+def test_normalize_pypi_metadata_falls_back_to_unknown_when_nothing_parseable():
+    raw = {"info": {"author_email": None, "maintainer_email": None}, "releases": {}}
+    normalized = normalize_pypi_metadata(raw)
+    assert normalized["maintainers"] == [{"name": "unknown"}]
+
+
+def test_normalize_pypi_metadata_builds_time_map_from_releases():
+    raw = {
+        "info": {"author_email": "a@example.com", "maintainer_email": None},
+        "releases": {
+            "1.0.0": [{"upload_time_iso_8601": "2020-01-01T00:00:00.000000Z"}],
+            "1.1.0": [{"upload_time_iso_8601": "2021-06-01T00:00:00.000000Z"}],
+            "2.0.0": [],  # a yanked/fileless release, should be skipped, not crash
+        },
+    }
+    normalized = normalize_pypi_metadata(raw)
+    assert normalized["time"]["1.0.0"] == "2020-01-01T00:00:00.000000Z"
+    assert normalized["time"]["created"] == "2020-01-01T00:00:00.000000Z"
+    assert normalized["time"]["modified"] == "2021-06-01T00:00:00.000000Z"
+    assert "2.0.0" not in normalized["time"]

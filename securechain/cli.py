@@ -38,7 +38,12 @@ from securechain.riskignore import accept_risk
 
 def _cmd_scan(args: argparse.Namespace) -> int:
     try:
-        report = run_scan(args.manifest_path, cache_dir=args.cache_dir, offline=args.offline)
+        report = run_scan(
+            args.manifest_path,
+            cache_dir=args.cache_dir,
+            offline=args.offline,
+            include_transitive=args.include_transitive,
+        )
     except ManifestError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
@@ -136,6 +141,7 @@ def build_parser() -> argparse.ArgumentParser:
     scan_parser.add_argument("--cache-dir", default=None)
     scan_parser.add_argument("--offline", action="store_true")
     scan_parser.add_argument("--ignore-file", default=".riskignore.json")
+    scan_parser.add_argument("--include-transitive", action="store_true")
     scan_parser.set_defaults(func=_cmd_scan)
 
     check_parser = subparsers.add_parser("check", help="CI/CD gate: evaluate a JSON report")

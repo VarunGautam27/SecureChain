@@ -18,6 +18,7 @@ def generate_recommendation(
     lookup_result: LookupResult,
     anomaly_flagged: bool,
     exploit_intel: Optional[ExploitIntelResult] = None,
+    is_direct: bool = True,
 ) -> str:
     # CISA KEV membership means this CVE is confirmed to be actively exploited
     # in the wild right now - that outranks the CVSS-derived severity tier
@@ -37,9 +38,19 @@ def generate_recommendation(
     has_cve = lookup_result.status == "ok" and lookup_result.cve_id
     if has_cve:
         if lookup_result.fixed_version:
+            if is_direct:
+                return kev_prefix + (
+                    f"Upgrade {package} to version {lookup_result.fixed_version} or later "
+                    f"to remediate {lookup_result.cve_id}."
+                )
+            # A transitive dependency's version isn't set directly in your own
+            # manifest, it's whatever version the package that actually depends
+            # on it resolves to, so "just edit package.json" doesn't apply here.
             return kev_prefix + (
-                f"Upgrade {package} to version {lookup_result.fixed_version} or later "
-                f"to remediate {lookup_result.cve_id}."
+                f"{package} is a transitive dependency, not one you depend on directly. "
+                f"Force it to version {lookup_result.fixed_version} or later using npm's "
+                f'"overrides" field in package.json (or "resolutions" for Yarn), or upgrade '
+                f"whichever direct dependency brings it in, to remediate {lookup_result.cve_id}."
             )
         return kev_prefix + (
             f"No fix available for {lookup_result.cve_id}. "

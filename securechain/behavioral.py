@@ -1,4 +1,4 @@
-"""Behavioral feature extraction from npm registry metadata.
+"""Behavioral feature extraction from npm or PyPI registry metadata.
 
 Four features are computed per dependency, used both as classifier inputs
 (alongside CVSS) and as the sole inputs to the Isolation Forest anomaly
@@ -16,6 +16,15 @@ detector:
   download_age_ratio - weekly downloads divided by package age in days; a
       very low ratio for an old package can indicate abandonment, a very
       high ratio for a young package can indicate a sudden viral pickup.
+
+npm and PyPI are both supported. Whichever registry a dependency came from,
+its raw metadata is normalized into the same {"time": {...}, "maintainers":
+[...]} shape before any feature is computed, so the four functions below
+never need to know which ecosystem they're looking at. The one honest
+difference: npm publishes a real, structured maintainers list, while PyPI's
+JSON API only exposes free-text author/maintainer email fields, so
+maintainer_count for a PyPI package is an approximation from that text, not
+an exact count the way it is for npm.
 """
 
 from __future__ import annotations
@@ -33,6 +42,8 @@ from packaging.version import InvalidVersion, Version
 
 NPM_REGISTRY_URL = "https://registry.npmjs.org"
 NPM_DOWNLOADS_URL = "https://api.npmjs.org/downloads/point/last-week"
+PYPI_REGISTRY_URL = "https://pypi.org/pypi"
+PYPI_DOWNLOADS_URL = "https://pypistats.org/api/packages"
 REQUEST_TIMEOUT_SECONDS = 10
 
 _NON_VERSION_TIME_KEYS = {"created", "modified"}
@@ -95,8 +106,120 @@ class NpmDownloadsClient:
             return None
 
 
+def _parse_pypi_emails(*fields: Optional[str]) -> list[str]:
+    """PyPI has no structured maintainers list like npm does, only free-text
+    author/maintainer email fields (often "Name <email>, Name2 <email2>" or
+    empty). This is an approximation of maintainer count from that text, not
+    an exact figure. author_email and maintainer_email commonly name the same
+    person for a small package, so entries are de-duplicated, otherwise a
+    single-maintainer package would be miscounted as two.
+    """
+    seen: dict[str, str] = {}
+    for field_value in fields:
+        if not field_value:
+            continue
+        for entry in field_value.split(","):
+            entry = entry.strip()
+            if entry:
+                seen.setdefault(entry.lower(), entry)
+    return list(seen.values())
+
+
+class PypiRegistryClient:
+    def __init__(self, session: Optional[requests.Session] = None):
+        self.session = session or requests.Session()
+
+    def fetch(self, package: str) -> Optional[dict]:
+        try:
+            response = self.session.get(
+                f"{PYPI_REGISTRY_URL}/{package}/json",
+                timeout=REQUEST_TIMEOUT_SECONDS,
+            )
+            response.raise_for_status()
+            raw = response.json()
+        except (requests.RequestException, json.JSONDecodeError, ValueError):
+            return None
+        return normalize_pypi_metadata(raw)
+
+
+class PypiDownloadsClient:
+    def __init__(self, session: Optional[requests.Session] = None):
+        self.session = session or requests.Session()
+
+    def fetch(self, package: str) -> Optional[int]:
+        try:
+            response = self.session.get(
+                f"{PYPI_DOWNLOADS_URL}/{package}/recent",
+                timeout=REQUEST_TIMEOUT_SECONDS,
+            )
+            response.raise_for_status()
+            data = response.json()
+            return int(data.get("data", {}).get("last_week", 0))
+        except (requests.RequestException, json.JSONDecodeError, ValueError, TypeError):
+            return None
+
+
+def normalize_pypi_metadata(raw: dict) -> dict:
+    """Converts PyPI's JSON API response into the same {"time": {...},
+    "maintainers": [...]} shape npm's registry already produces, so the
+    feature functions below can stay ecosystem-agnostic.
+    """
+    info = raw.get("info", {}) or {}
+    releases = raw.get("releases", {}) or {}
+
+    time_map: dict = {}
+    earliest = None
+    latest = None
+    for version, files in releases.items():
+        if not files:
+            continue
+        upload_time = files[0].get("upload_time_iso_8601") or files[0].get("upload_time")
+        if not upload_time:
+            continue
+        time_map[version] = upload_time
+        if earliest is None or upload_time < earliest:
+            earliest = upload_time
+        if latest is None or upload_time > latest:
+            latest = upload_time
+
+    if earliest is not None:
+        time_map["created"] = earliest
+    if latest is not None:
+        time_map["modified"] = latest
+
+    maintainer_names = _parse_pypi_emails(info.get("maintainer_email"), info.get("author_email"))
+    if not maintainer_names:
+        maintainer_names = ["unknown"]  # PyPI reported nothing parseable; treated as a single, unnamed owner
+
+    project_urls = info.get("project_urls") or {}
+    source_url = None
+    for key in ("Source", "Repository", "Source Code", "Homepage", "Home"):
+        if project_urls.get(key):
+            source_url = project_urls[key]
+            break
+    if not source_url:
+        source_url = info.get("home_page")
+
+    return {
+        "time": time_map,
+        "maintainers": [{"name": name} for name in maintainer_names],
+        # Matches npm's registry shape for this field, so extract_github_repo()
+        # in scorecard.py can read either ecosystem's normalized metadata the
+        # same way, without needing to know which one it came from.
+        "repository": {"url": source_url} if source_url else None,
+    }
+
+
 class CachedBehavioralClient:
-    """Cache-first wrapper mirroring CachedLookupClient's semantics for npm metadata."""
+    """Cache-first wrapper mirroring CachedLookupClient's semantics for
+    registry metadata, dispatching to npm or PyPI clients and cache files
+    based on the ecosystem of the dependency being looked up.
+    """
+
+    _CACHE_FILES = {
+        "npm": ("npm_metadata.json", "npm_downloads.json"),
+        "pypi": ("pypi_metadata.json", "pypi_downloads.json"),
+    }
 
     def __init__(
         self,
@@ -104,32 +227,43 @@ class CachedBehavioralClient:
         offline: bool = False,
         registry_client: Optional[NpmRegistryClient] = None,
         downloads_client: Optional[NpmDownloadsClient] = None,
+        pypi_registry_client: Optional[PypiRegistryClient] = None,
+        pypi_downloads_client: Optional[PypiDownloadsClient] = None,
     ):
         self.offline = offline
-        self._metadata_cache: dict = {}
-        self._downloads_cache: dict = {}
+        self._metadata_cache: dict[str, dict] = {}
+        self._downloads_cache: dict[str, dict] = {}
         if cache_dir:
-            metadata_file = Path(cache_dir) / "npm_metadata.json"
-            downloads_file = Path(cache_dir) / "npm_downloads.json"
-            if metadata_file.exists():
-                self._metadata_cache = json.loads(metadata_file.read_text(encoding="utf-8"))
-            if downloads_file.exists():
-                self._downloads_cache = json.loads(downloads_file.read_text(encoding="utf-8"))
+            for ecosystem, (metadata_name, downloads_name) in self._CACHE_FILES.items():
+                metadata_file = Path(cache_dir) / metadata_name
+                downloads_file = Path(cache_dir) / downloads_name
+                if metadata_file.exists():
+                    self._metadata_cache[ecosystem] = json.loads(metadata_file.read_text(encoding="utf-8"))
+                if downloads_file.exists():
+                    self._downloads_cache[ecosystem] = json.loads(downloads_file.read_text(encoding="utf-8"))
         self.registry_client = registry_client or NpmRegistryClient()
         self.downloads_client = downloads_client or NpmDownloadsClient()
+        self.pypi_registry_client = pypi_registry_client or PypiRegistryClient()
+        self.pypi_downloads_client = pypi_downloads_client or PypiDownloadsClient()
 
-    def fetch_metadata(self, package: str) -> Optional[dict]:
-        if package in self._metadata_cache:
-            return self._metadata_cache[package]
+    def fetch_metadata(self, package: str, ecosystem: str = "npm") -> Optional[dict]:
+        cache = self._metadata_cache.get(ecosystem, {})
+        if package in cache:
+            return cache[package]
         if self.offline:
             return None
+        if ecosystem == "pypi":
+            return self.pypi_registry_client.fetch(package)
         return self.registry_client.fetch(package)
 
-    def fetch_downloads(self, package: str) -> Optional[int]:
-        if package in self._downloads_cache:
-            return self._downloads_cache[package]
+    def fetch_downloads(self, package: str, ecosystem: str = "npm") -> Optional[int]:
+        cache = self._downloads_cache.get(ecosystem, {})
+        if package in cache:
+            return cache[package]
         if self.offline:
             return None
+        if ecosystem == "pypi":
+            return self.pypi_downloads_client.fetch(package)
         return self.downloads_client.fetch(package)
 
 
@@ -214,9 +348,10 @@ def _download_age_ratio(weekly_downloads: int, created: Optional[datetime]) -> f
 def compute_behavioral_features(
     package: str,
     client: CachedBehavioralClient,
+    ecosystem: str = "npm",
 ) -> BehavioralFeatures:
-    metadata = client.fetch_metadata(package)
-    downloads = client.fetch_downloads(package)
+    metadata = client.fetch_metadata(package, ecosystem=ecosystem)
+    downloads = client.fetch_downloads(package, ecosystem=ecosystem)
 
     if metadata is None or downloads is None:
         return BehavioralFeatures.failed()

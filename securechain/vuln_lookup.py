@@ -18,7 +18,7 @@ from __future__ import annotations
 import json
 import os
 import re
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Optional
 
@@ -48,6 +48,7 @@ class LookupResult:
     fixed_version: Optional[str] = None
     source: Optional[str] = None  # "github_advisory" | "nvd" | "cache"
     summary: Optional[str] = None
+    cwes: list = field(default_factory=list)  # e.g. ["CWE-1321"], the weakness category, not the CVE itself
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -91,17 +92,23 @@ def _version_satisfies_range(version_str: str, range_str: str) -> bool:
 
 
 class GitHubAdvisoryClient:
-    """Queries the GitHub Advisory Database GraphQL API for npm advisories."""
+    """Queries the GitHub Advisory Database GraphQL API for advisories.
+
+    Supports both ecosystems this project scans: NPM and PIP (Python). Which
+    one is queried is passed in per lookup, not fixed at construction time,
+    since a single scan can eventually cover manifests from either ecosystem.
+    """
 
     QUERY = """
-    query($package: String!) {
-      securityVulnerabilities(ecosystem: NPM, package: $package, first: 25) {
+    query($ecosystem: SecurityAdvisoryEcosystem!, $package: String!) {
+      securityVulnerabilities(ecosystem: $ecosystem, package: $package, first: 25) {
         nodes {
           advisory {
             summary
             severity
             cvss { score }
             identifiers { type value }
+            cwes(first: 5) { nodes { cweId } }
           }
           vulnerableVersionRange
           firstPatchedVersion { identifier }
@@ -110,18 +117,22 @@ class GitHubAdvisoryClient:
     }
     """
 
+    _ECOSYSTEM_GRAPHQL_NAME = {"npm": "NPM", "pypi": "PIP"}
+
     def __init__(self, token: Optional[str] = None, session: Optional[requests.Session] = None):
         self.token = token or os.environ.get("GITHUB_TOKEN")
         self.session = session or requests.Session()
 
-    def lookup(self, package: str, version: str) -> LookupResult:
+    def lookup(self, package: str, version: str, ecosystem: str = "npm") -> LookupResult:
         if not self.token:
             return LookupResult.failed("no GITHUB_TOKEN configured, skipped GitHub Advisory lookup")
+
+        graphql_ecosystem = self._ECOSYSTEM_GRAPHQL_NAME.get(ecosystem, "NPM")
 
         try:
             response = self.session.post(
                 GITHUB_GRAPHQL_URL,
-                json={"query": self.QUERY, "variables": {"package": package}},
+                json={"query": self.QUERY, "variables": {"ecosystem": graphql_ecosystem, "package": package}},
                 headers={"Authorization": f"Bearer {self.token}"},
                 timeout=REQUEST_TIMEOUT_SECONDS,
             )
@@ -153,6 +164,7 @@ class GitHubAdvisoryClient:
         )
         cvss_score = (advisory.get("cvss") or {}).get("score") or None
         fixed = (best.get("firstPatchedVersion") or {}).get("identifier")
+        cwes = [n["cweId"] for n in (advisory.get("cwes") or {}).get("nodes", []) if n.get("cweId")]
 
         return LookupResult(
             status="ok",
@@ -162,6 +174,7 @@ class GitHubAdvisoryClient:
             fixed_version=fixed,
             source="github_advisory",
             summary=advisory.get("summary"),
+            cwes=cwes,
         )
 
 
@@ -233,7 +246,7 @@ class CachedLookupClient:
         self.github_client = github_client or GitHubAdvisoryClient()
         self.nvd_client = nvd_client or NVDClient()
 
-    def lookup(self, package: str, version: str) -> LookupResult:
+    def lookup(self, package: str, version: str, ecosystem: str = "npm") -> LookupResult:
         key = f"{package}@{version}"
         if key in self._cache:
             data = dict(self._cache[key])
@@ -243,7 +256,7 @@ class CachedLookupClient:
         if self.offline:
             return LookupResult.failed(f"no cache entry for {key} and --offline set, lookup skipped")
 
-        gh_result = self.github_client.lookup(package, version)
+        gh_result = self.github_client.lookup(package, version, ecosystem=ecosystem)
         if gh_result.status == "ok":
             return gh_result
         if gh_result.status == "no_cve":

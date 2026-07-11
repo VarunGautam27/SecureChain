@@ -1,0 +1,12 @@
+{
+  "_comment": "Real weekly download counts pulled from pypistats.org on 2026-07-10 (2026-07-11 for werkzeug) for the 9 packages in demo/requirements.txt.",
+  "pyyaml": 253289713,
+  "pillow": 118536768,
+  "werkzeug": 57130683,
+  "urllib3": 409300189,
+  "jinja2": 153775549,
+  "certifi": 407695461,
+  "idna": 386771389,
+  "charset-normalizer": 373396881,
+  "six": 256372227
+}

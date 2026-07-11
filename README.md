@@ -144,31 +144,25 @@ threshold.
 
 ### Try it against the demo manifest
 
-`demo/package.json` is a single, realistic manifest with 20 dependencies (9 clean,
-11 flagged across Low/Medium/High/Critical) - there is no separate "vulnerable" and
+`demo/package.json` is a single, realistic manifest with 15 dependencies (9 clean,
+6 flagged across Low/Medium/High/Critical) - there is no separate "vulnerable" and
 "fixed" copy. You edit it in place, the same way you'd fix a real project:
 
 ```bash
 securechain scan demo/package.json --cache-dir demo/fixtures --offline
 securechain check result/report.json --ignore-file .riskignore.json
-# exits non-zero: minimist, axios, word-wrap (Medium), moment, ansi-regex,
-# glob-parent, json5, tar (High), and xml2js, node-ipc (Critical) are all
-# unaccepted - 10 failures. colors (Low) already has a recorded exception,
-# so it only logs a warning.
+# exits non-zero: minimist, axios (Medium), moment (High), and xml2js, node-ipc
+# (Critical) are all unaccepted - 5 failures. colors (Low) already has a
+# recorded exception, so it only logs a warning.
 
 # colors already has a recorded exception committed in .riskignore.json, so
-# it only ever warns, not fails. Fix the other 10 by editing demo/package.json
+# it only ever warns, not fails. Fix the other 5 by editing demo/package.json
 # yourself:
-#   minimist    1.2.0 -> 1.2.6
-#   axios       1.5.0 -> 1.6.0
-#   word-wrap   1.2.3 -> 1.2.4
-#   moment      2.29.1 -> 2.29.4
-#   ansi-regex  5.0.0 -> 5.0.1
-#   glob-parent 5.1.1 -> 5.1.2
-#   json5       2.2.1 -> 2.2.2
-#   tar         6.1.0 -> 6.1.1
-#   xml2js      0.4.19 -> 0.5.0
-#   node-ipc    9.2.1 -> 9.2.2
+#   minimist  1.2.0 -> 1.2.6
+#   axios     1.5.0 -> 1.6.0
+#   moment    2.29.1 -> 2.29.4
+#   xml2js    0.4.19 -> 0.5.0
+#   node-ipc  9.2.1 -> 9.2.2
 
 securechain scan demo/package.json --cache-dir demo/fixtures --offline
 securechain check result/report.json --ignore-file .riskignore.json
@@ -176,10 +170,93 @@ securechain check result/report.json --ignore-file .riskignore.json
 # behavioral-only, no-CVE flag) is already accepted.
 ```
 
-`--cache-dir demo/fixtures` points the scanner at curated offline fixtures for the 20
+`--cache-dir demo/fixtures` points the scanner at curated offline fixtures for the 15
 demo packages (see below) so the walkthrough is deterministic and doesn't depend on
 live network access, API tokens, or rate limits. Omit it (and `--offline`) for a real
 scan against live NVD / GitHub Advisory / npm registry data.
+
+## Ecosystem support: npm and PyPI
+
+`scan` works against two ecosystems, decided purely by the manifest file's own
+name, there is no content sniffing or a `--ecosystem` flag to set:
+
+- A file named `package.json` is read as npm. This was the original, and still
+  primary, scope.
+- A file named `requirements.txt` is read as Python/PyPI (`name==version` lines;
+  comments, blank lines, editable/VCS installs, and bare unpinned names are
+  skipped, since there's no specific version to look up for those).
+
+Everything downstream, GitHub Advisory Database lookup, EPSS/KEV exploit
+intelligence, the Random Forest and Isolation Forest models, SHAP, and the
+severity engine, runs identically regardless of which ecosystem a dependency
+came from. The only two places that differ are the registry a package's
+behavioral metadata comes from (npm's registry vs PyPI's JSON API and
+pypistats.org for weekly downloads), and the GitHub Advisory ecosystem filter
+(`NPM` vs `PIP`). Try it against the bundled Python demo manifest:
+
+```bash
+securechain scan demo/requirements.txt --cache-dir demo/fixtures --offline
+securechain check result/report.json --ignore-file .riskignore.json
+# exits non-zero: pyyaml and pillow (Critical), werkzeug (High), urllib3 and
+# jinja2 (Medium) are all unaccepted - 5 failures. certifi, idna,
+# charset-normalizer, and six are Safe.
+```
+
+**One honest limitation, not hidden**: npm's registry publishes a real,
+structured maintainers list; PyPI's JSON API only exposes free-text
+`author_email`/`maintainer_email` fields (often a single name, sometimes
+several separated by commas, sometimes empty). `maintainer_count` for a PyPI
+package is therefore an approximation parsed from that text (deduplicated
+where the same person appears in both fields), not an exact count the way it
+is for npm.
+
+**CWE categorization**: every CVE-identified finding, in either ecosystem, now
+also carries its CWE (Common Weakness Enumeration) category when GitHub
+Advisory Database provides one, e.g. `CWE-20` for improper input validation,
+shown in the Severity tab alongside the CVE ID. This labels *what kind* of
+vulnerability it is, not just which one, useful for spotting a pattern across
+a project's dependencies rather than treating every finding as unrelated.
+
+## Transitive dependencies
+
+`scan --include-transitive` (GUI: the "Also scan transitive dependencies"
+checkbox, enabled automatically when a `package-lock.json` is found next to
+the manifest) also scans every package a lockfile actually resolves, not only
+the ones `package.json` names directly. A large share of real supply chain
+risk sits in dependencies of dependencies, never declared anywhere in your
+own manifest, the event-stream incident spread through most victims exactly
+this way. Each dependency in the report carries an `is_direct` field and a
+`TRANSITIVE` badge when it isn't one of yours directly; the Recommendation
+tab adjusts accordingly, a transitive fix means adding an `overrides` entry
+(or upgrading whichever direct dependency pulls it in), not editing
+`package.json` for a package that was never listed there.
+
+npm only, for now: `package-lock.json` (lockfile version 2 or 3) has a
+well-defined, universal format. Plain pip has no equivalent, `requirements.txt`
+carries no resolved, transitive tree, so this is not yet available for the
+PyPI side. `demo/package-lock.json` in this repository is a real lockfile,
+generated with an actual `npm install`, not hand-written, covering 13 of the
+demo's 15 direct dependencies (`colors` and `node-ipc`'s specific incident
+versions are no longer installable from the live registry at all, so they
+could not be included in a real, generated lockfile; both are still fully
+covered by the direct scan regardless).
+
+## OpenSSF Scorecard
+
+Every dependency's own GitHub repository (read from whichever registry
+already supplied its behavioral metadata, no extra lookup needed) is checked
+against [OpenSSF Scorecard](https://scorecard.dev), a free, public measure of
+a project's own security hygiene, does it require code review before
+merging, does it pin CI dependencies, does it have a security policy, is it
+actively maintained. This is shown in the Behavioral tab as context, the
+score and its single lowest scoring check, and it is never fed into either
+ML model, so it changes nothing about a `risk_score` or an anomaly flag.
+CVSS and the behavioral features describe the release you have pinned;
+Scorecard describes the health of the project that produces it, a different
+question. Not every dependency has a discoverable GitHub repository, or one
+Scorecard has scanned (its weekly run covers roughly the top 1,000,000
+projects, not everything on npm or PyPI), that degrades to `not_available`
+in the report rather than an error.
 
 ## Architecture
 
@@ -399,7 +476,7 @@ changing over time. Omit both flags for a real scan against live data.
 `demo/package.json` is the single manifest wired into the 2-job GitHub Actions
 workflow, so a blocked build and an exception accepted pass are always
 visible on every push, and it doubles as the hands-on manual exercise. It
-carries 20 packages spanning all 5 severity tiers:
+carries 15 packages spanning all 5 severity tiers:
 
 | Package | Version | Expected severity | Why |
 |---|---|---|---|
@@ -415,22 +492,17 @@ carries 20 packages spanning all 5 severity tiers:
 | colors | 1.4.1 | Low | No CVE was ever filed - in January 2022 the maintainer intentionally sabotaged this exact version (and the related `faker` package) as a protest, breaking countless builds. A single maintainer and a sharply irregular release history trigger the one-tier anomaly escalation from Safe. There's no fixed version to upgrade to (it wasn't a code vulnerability); it can only be resolved by accepting it in `.riskignore.json` or removing the dependency - downgrading does **not** clear it, since the anomaly reflects the package's whole registry history, not the pinned version. |
 | minimist | 1.2.0 | Medium | Known CVE (CVE-2020-7598, prototype pollution), CVSS 5.6, fix available in 1.2.6. |
 | axios | 1.5.0 | Medium | Known CVE (CVE-2023-45857, cross-origin cookie leak via redirected proxy auth), CVSS 6.5, fix available in 1.6.0. |
-| word-wrap | 1.2.3 | Medium | Known CVE (CVE-2023-26115, ReDoS when trimming input), CVSS 5.3, fix available in 1.2.4. |
 | moment | 2.29.1 | High | Known CVE (CVE-2022-31129, ReDoS in date parsing), CVSS 7.5, fix available in 2.29.4. |
-| ansi-regex | 5.0.0 | High | Known CVE (CVE-2021-3807, ReDoS matching invalid ANSI escape codes), CVSS 7.5, fix available in 5.0.1. |
-| glob-parent | 5.1.1 | High | Known CVE (CVE-2020-28469, ReDoS in the enclosure regex), CVSS 7.5, fix available in 5.1.2. |
-| json5 | 2.2.1 | High | Known CVE (CVE-2022-46175, prototype pollution via `__proto__` keys), CVSS 7.1, fix available in 2.2.2. |
-| tar | 6.1.0 | High | Known CVE (CVE-2021-32804, arbitrary file creation/overwrite via insufficiently sanitized absolute paths), CVSS 8.2, fix available in 6.1.1. |
 | xml2js | 0.4.19 | Critical | Known prototype-pollution advisory, curated at CVSS 9.8 for this walkthrough, fix available in 0.5.0. |
 | node-ipc | 9.2.1 | Critical | Known advisory (GHSA-lzc9-3d29-fq7f, the 2022 "protestware" incident: geo-targeted destructive file writes), curated at CVSS 9.8, fix available in 9.2.2. |
 
-None of the 5 CVEs added above (or the 3 added earlier) are listed on CISA's KEV catalog - verified directly against the live catalog, not assumed.
+None of these CVEs are listed on CISA's KEV catalog - verified directly against the live catalog, not assumed.
 
 The committed `.riskignore.json` carries one real, permanent entry:
 `colors@1.4.1` (no possible fix, so it's accepted rather than blocking every
 scan forever). Scanning `demo/package.json` and running `check` as committed
-exits non-zero with 10 failures (colors itself just logs a warning, already
-covered). Work through the remaining 10 by hand, following the "Try it
+exits non-zero with 5 failures (colors itself just logs a warning, already
+covered). Work through the remaining 5 by hand, following the "Try it
 against the demo manifest" walkthrough above, upgrading each to its fixed
 version or accepting it, to reach a clean pass yourself.
 

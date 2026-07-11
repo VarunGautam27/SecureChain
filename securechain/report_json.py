@@ -48,6 +48,7 @@ from typing import Optional
 from securechain.behavioral import BehavioralFeatures
 from securechain.exploit_intel import ExploitIntelResult
 from securechain.ml.explain import ExplanationResult
+from securechain.scorecard import ScorecardResult
 from securechain.vuln_lookup import LookupResult
 
 SEVERITY_ORDER = ["critical", "high", "medium", "low", "safe"]
@@ -72,6 +73,8 @@ def detect_scanner_identity() -> str:
 class DependencyRecord:
     package: str
     version: str
+    ecosystem: str
+    is_direct: bool
     lookup_status: str
     cvss: dict
     behavioral: dict
@@ -83,6 +86,7 @@ class DependencyRecord:
     recommendation: str
     shap: dict
     exploit_intel: dict
+    scorecard: dict
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -102,10 +106,15 @@ def build_dependency_record(
     classifier_explanation: ExplanationResult,
     anomaly_explanation: ExplanationResult,
     exploit_intel: ExploitIntelResult,
+    scorecard: Optional[ScorecardResult] = None,
+    ecosystem: str = "npm",
+    is_direct: bool = True,
 ) -> DependencyRecord:
     return DependencyRecord(
         package=package,
         version=version,
+        ecosystem=ecosystem,
+        is_direct=is_direct,
         lookup_status=lookup_result.status,
         cvss={
             "score": lookup_result.cvss_score,
@@ -114,8 +123,10 @@ def build_dependency_record(
             "fixed_version": lookup_result.fixed_version,
             "severity_label": lookup_result.severity_label,
             "summary": lookup_result.summary,
+            "cwes": lookup_result.cwes,
         },
         exploit_intel=exploit_intel.to_dict(),
+        scorecard=(scorecard or ScorecardResult.not_available()).to_dict(),
         behavioral=behavioral.to_dict(),
         risk_score=risk_score,
         anomaly_flagged=anomaly_flagged,

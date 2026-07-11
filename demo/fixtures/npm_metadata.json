@@ -1,6 +1,5 @@
 {
   "_comment": "Curated npm registry metadata fixtures for demo/package.json (time map + maintainers). Illustrative synthetic release histories designed to demonstrate the behavioral feature engine: lodash/chalk/uuid/debug/semver/commander/dotenv/yargs/picocolors/minimist/xml2js/axios/moment/node-ipc all have a mildly uneven but unremarkable release cadence and a healthy maintainer pool (normal; their severity, where non-Safe, comes from CVSS alone). colors has a single maintainer, an anomalously long dormancy, AND a disproportionate version jump (a strong behavioral anomaly, escalating its no-CVE Safe base to Low) - consistent with the real January 2022 colors/faker self-sabotage incident referenced in advisories.json. Feature computation only depends on the shape of this release history, not on the exact version string queried by the manifest scan.",
-
   "lodash": {
     "time": {
       "created": "2015-01-01T00:00:00.000Z",
@@ -18,13 +17,27 @@
       "4.17.15": "2016-09-17T00:00:00.000Z"
     },
     "maintainers": [
-      {"name": "jdalton", "email": "jdalton@example.com"},
-      {"name": "mathias", "email": "mathias@example.com"},
-      {"name": "blaine", "email": "blaine@example.com"},
-      {"name": "kitcambridge", "email": "kitcambridge@example.com"}
-    ]
+      {
+        "name": "jdalton",
+        "email": "jdalton@example.com"
+      },
+      {
+        "name": "mathias",
+        "email": "mathias@example.com"
+      },
+      {
+        "name": "blaine",
+        "email": "blaine@example.com"
+      },
+      {
+        "name": "kitcambridge",
+        "email": "kitcambridge@example.com"
+      }
+    ],
+    "repository": {
+      "url": "https://github.com/lodash/lodash.git"
+    }
   },
-
   "chalk": {
     "time": {
       "created": "2015-02-01T00:00:00.000Z",
@@ -42,12 +55,23 @@
       "5.3.0": "2016-10-26T00:00:00.000Z"
     },
     "maintainers": [
-      {"name": "sindresorhus", "email": "sindresorhus@example.com"},
-      {"name": "qix", "email": "qix@example.com"},
-      {"name": "bcoe", "email": "bcoe@example.com"}
-    ]
+      {
+        "name": "sindresorhus",
+        "email": "sindresorhus@example.com"
+      },
+      {
+        "name": "qix",
+        "email": "qix@example.com"
+      },
+      {
+        "name": "bcoe",
+        "email": "bcoe@example.com"
+      }
+    ],
+    "repository": {
+      "url": "https://github.com/chalk/chalk.git"
+    }
   },
-
   "uuid": {
     "time": {
       "created": "2014-06-01T00:00:00.000Z",
@@ -65,12 +89,23 @@
       "9.1.5": "2016-02-26T00:00:00.000Z"
     },
     "maintainers": [
-      {"name": "ctavan", "email": "ctavan@example.com"},
-      {"name": "broofa", "email": "broofa@example.com"},
-      {"name": "nicjansma", "email": "nicjansma@example.com"}
-    ]
+      {
+        "name": "ctavan",
+        "email": "ctavan@example.com"
+      },
+      {
+        "name": "broofa",
+        "email": "broofa@example.com"
+      },
+      {
+        "name": "nicjansma",
+        "email": "nicjansma@example.com"
+      }
+    ],
+    "repository": {
+      "url": "https://github.com/uuidjs/uuid.git"
+    }
   },
-
   "debug": {
     "time": {
       "created": "2014-07-01T00:00:00.000Z",
@@ -88,11 +123,19 @@
       "4.4.5": "2016-03-27T00:00:00.000Z"
     },
     "maintainers": [
-      {"name": "tjholowaychuk", "email": "tj@example.com"},
-      {"name": "qix", "email": "qix2@example.com"}
-    ]
+      {
+        "name": "tjholowaychuk",
+        "email": "tj@example.com"
+      },
+      {
+        "name": "qix",
+        "email": "qix2@example.com"
+      }
+    ],
+    "repository": {
+      "url": "https://github.com/debug-js/debug.git"
+    }
   },
-
   "semver": {
     "time": {
       "created": "2014-08-01T00:00:00.000Z",
@@ -110,11 +153,19 @@
       "7.6.5": "2016-04-27T00:00:00.000Z"
     },
     "maintainers": [
-      {"name": "isaacs", "email": "isaacs2@example.com"},
-      {"name": "ljharb", "email": "ljharb2@example.com"}
-    ]
+      {
+        "name": "isaacs",
+        "email": "isaacs2@example.com"
+      },
+      {
+        "name": "ljharb",
+        "email": "ljharb2@example.com"
+      }
+    ],
+    "repository": {
+      "url": "https://github.com/npm/node-semver.git"
+    }
   },
-
   "commander": {
     "time": {
       "created": "2014-09-01T00:00:00.000Z",
@@ -132,11 +183,16 @@
       "12.0.5": "2016-05-27T00:00:00.000Z"
     },
     "maintainers": [
-      {"name": "tjholowaychuk2", "email": "tj2@example.com"},
-      {"name": "shadowspawn", "email": "shadowspawn@example.com"}
+      {
+        "name": "tjholowaychuk2",
+        "email": "tj2@example.com"
+      },
+      {
+        "name": "shadowspawn",
+        "email": "shadowspawn@example.com"
+      }
     ]
   },
-
   "dotenv": {
     "time": {
       "created": "2014-10-01T00:00:00.000Z",
@@ -154,10 +210,15 @@
       "16.4.5": "2016-06-27T00:00:00.000Z"
     },
     "maintainers": [
-      {"name": "motdotla", "email": "motdotla@example.com"}
-    ]
+      {
+        "name": "motdotla",
+        "email": "motdotla@example.com"
+      }
+    ],
+    "repository": {
+      "url": "https://github.com/motdotla/dotenv.git"
+    }
   },
-
   "yargs": {
     "time": {
       "created": "2014-11-01T00:00:00.000Z",
@@ -175,11 +236,19 @@
       "17.8.5": "2016-07-27T00:00:00.000Z"
     },
     "maintainers": [
-      {"name": "bcoe2", "email": "bcoe2@example.com"},
-      {"name": "nexdrew", "email": "nexdrew@example.com"}
-    ]
+      {
+        "name": "bcoe2",
+        "email": "bcoe2@example.com"
+      },
+      {
+        "name": "nexdrew",
+        "email": "nexdrew@example.com"
+      }
+    ],
+    "repository": {
+      "url": "https://github.com/yargs/yargs.git"
+    }
   },
-
   "picocolors": {
     "time": {
       "created": "2014-12-01T00:00:00.000Z",
@@ -197,10 +266,15 @@
       "1.1.5": "2016-08-27T00:00:00.000Z"
     },
     "maintainers": [
-      {"name": "alexeyraspopov", "email": "alexeyraspopov@example.com"}
-    ]
+      {
+        "name": "alexeyraspopov",
+        "email": "alexeyraspopov@example.com"
+      }
+    ],
+    "repository": {
+      "url": "https://github.com/alexeyraspopov/picocolors.git"
+    }
   },
-
   "minimist": {
     "time": {
       "created": "2015-01-01T00:00:00.000Z",
@@ -218,12 +292,23 @@
       "1.2.15": "2016-03-27T00:00:00.000Z"
     },
     "maintainers": [
-      {"name": "substack", "email": "substack@example.com"},
-      {"name": "ljharb", "email": "ljharb@example.com"},
-      {"name": "isaacs", "email": "isaacs@example.com"}
-    ]
+      {
+        "name": "substack",
+        "email": "substack@example.com"
+      },
+      {
+        "name": "ljharb",
+        "email": "ljharb@example.com"
+      },
+      {
+        "name": "isaacs",
+        "email": "isaacs@example.com"
+      }
+    ],
+    "repository": {
+      "url": "https://github.com/minimistjs/minimist.git"
+    }
   },
-
   "xml2js": {
     "time": {
       "created": "2015-01-01T00:00:00.000Z",
@@ -241,11 +326,19 @@
       "0.4.15": "2017-06-19T00:00:00.000Z"
     },
     "maintainers": [
-      {"name": "leonerd", "email": "leonerd@example.com"},
-      {"name": "barrysteyn", "email": "barrysteyn@example.com"}
-    ]
+      {
+        "name": "leonerd",
+        "email": "leonerd@example.com"
+      },
+      {
+        "name": "barrysteyn",
+        "email": "barrysteyn@example.com"
+      }
+    ],
+    "repository": {
+      "url": "https://github.com/Leonidas-from-XIV/node-xml2js.git"
+    }
   },
-
   "axios": {
     "time": {
       "created": "2015-03-01T00:00:00.000Z",
@@ -263,12 +356,23 @@
       "1.5.0": "2016-11-26T00:00:00.000Z"
     },
     "maintainers": [
-      {"name": "mzabriskie", "email": "mzabriskie@example.com"},
-      {"name": "jasonsaayman", "email": "jasonsaayman@example.com"},
-      {"name": "dijonmusters", "email": "dijonmusters@example.com"}
-    ]
+      {
+        "name": "mzabriskie",
+        "email": "mzabriskie@example.com"
+      },
+      {
+        "name": "jasonsaayman",
+        "email": "jasonsaayman@example.com"
+      },
+      {
+        "name": "dijonmusters",
+        "email": "dijonmusters@example.com"
+      }
+    ],
+    "repository": {
+      "url": "https://github.com/axios/axios.git"
+    }
   },
-
   "moment": {
     "time": {
       "created": "2015-04-01T00:00:00.000Z",
@@ -286,11 +390,19 @@
       "2.29.10": "2016-12-26T00:00:00.000Z"
     },
     "maintainers": [
-      {"name": "iskren", "email": "iskren@example.com"},
-      {"name": "marwahaha", "email": "marwahaha@example.com"}
-    ]
+      {
+        "name": "iskren",
+        "email": "iskren@example.com"
+      },
+      {
+        "name": "marwahaha",
+        "email": "marwahaha@example.com"
+      }
+    ],
+    "repository": {
+      "url": "https://github.com/moment/moment.git"
+    }
   },
-
   "node-ipc": {
     "time": {
       "created": "2015-05-01T00:00:00.000Z",
@@ -308,11 +420,19 @@
       "9.2.1": "2017-01-27T00:00:00.000Z"
     },
     "maintainers": [
-      {"name": "riaevangelist", "email": "riaevangelist@example.com"},
-      {"name": "roy", "email": "roy@example.com"}
-    ]
+      {
+        "name": "riaevangelist",
+        "email": "riaevangelist@example.com"
+      },
+      {
+        "name": "roy",
+        "email": "roy@example.com"
+      }
+    ],
+    "repository": {
+      "url": "https://github.com/RIAEvangelist/node-ipc.git"
+    }
   },
-
   "colors": {
     "time": {
       "created": "2015-01-01T00:00:00.000Z",
@@ -331,10 +451,12 @@
       "2.5.0": "2022-08-21T00:00:00.000Z"
     },
     "maintainers": [
-      {"name": "marak", "email": "marak@example.com"}
+      {
+        "name": "marak",
+        "email": "marak@example.com"
+      }
     ]
   },
-
   "ansi-regex": {
     "time": {
       "created": "2015-02-15T00:00:00.000Z",
@@ -350,11 +472,19 @@
       "5.0.1": "2016-07-14T00:00:00.000Z"
     },
     "maintainers": [
-      {"name": "sindresorhus", "email": "sindresorhus2@example.com"},
-      {"name": "qix", "email": "qix3@example.com"}
-    ]
+      {
+        "name": "sindresorhus",
+        "email": "sindresorhus2@example.com"
+      },
+      {
+        "name": "qix",
+        "email": "qix3@example.com"
+      }
+    ],
+    "repository": {
+      "url": "https://github.com/chalk/ansi-regex.git"
+    }
   },
-
   "glob-parent": {
     "time": {
       "created": "2015-03-15T00:00:00.000Z",
@@ -370,11 +500,19 @@
       "5.1.2": "2016-08-14T00:00:00.000Z"
     },
     "maintainers": [
-      {"name": "es128", "email": "es128@example.com"},
-      {"name": "phated", "email": "phated@example.com"}
-    ]
+      {
+        "name": "es128",
+        "email": "es128@example.com"
+      },
+      {
+        "name": "phated",
+        "email": "phated@example.com"
+      }
+    ],
+    "repository": {
+      "url": "https://github.com/gulpjs/glob-parent.git"
+    }
   },
-
   "json5": {
     "time": {
       "created": "2015-04-15T00:00:00.000Z",
@@ -388,11 +526,19 @@
       "2.2.2": "2016-05-14T00:00:00.000Z"
     },
     "maintainers": [
-      {"name": "aseemk", "email": "aseemk@example.com"},
-      {"name": "jordanbtucker", "email": "jordanbtucker@example.com"}
-    ]
+      {
+        "name": "aseemk",
+        "email": "aseemk@example.com"
+      },
+      {
+        "name": "jordanbtucker",
+        "email": "jordanbtucker@example.com"
+      }
+    ],
+    "repository": {
+      "url": "https://github.com/json5/json5.git"
+    }
   },
-
   "word-wrap": {
     "time": {
       "created": "2015-05-15T00:00:00.000Z",
@@ -404,10 +550,15 @@
       "1.2.4": "2016-02-14T00:00:00.000Z"
     },
     "maintainers": [
-      {"name": "jonschlinkert", "email": "jonschlinkert@example.com"}
-    ]
+      {
+        "name": "jonschlinkert",
+        "email": "jonschlinkert@example.com"
+      }
+    ],
+    "repository": {
+      "url": "https://github.com/jonschlinkert/word-wrap.git"
+    }
   },
-
   "tar": {
     "time": {
       "created": "2015-06-15T00:00:00.000Z",
@@ -422,8 +573,17 @@
       "6.1.1": "2016-10-05T00:00:00.000Z"
     },
     "maintainers": [
-      {"name": "isaacs3", "email": "isaacs3@example.com"},
-      {"name": "ruyadorno", "email": "ruyadorno@example.com"}
-    ]
+      {
+        "name": "isaacs3",
+        "email": "isaacs3@example.com"
+      },
+      {
+        "name": "ruyadorno",
+        "email": "ruyadorno@example.com"
+      }
+    ],
+    "repository": {
+      "url": "https://github.com/isaacs/node-tar.git"
+    }
   }
 }

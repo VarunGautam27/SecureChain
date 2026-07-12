@@ -338,9 +338,7 @@
 
   <div id="emptyState" class="empty-state">
     <h2>Select a project folder to begin</h2>
-    <p>Choose a folder that contains a package.json file, then scan it. This
-    runs the same scan pipeline the CI gate uses, so a live scan here reads
-    the same real advisory, exploit, and registry data a push would trigger.</p>
+    <p>Choose a folder with a package.json or requirements.txt, then scan it.</p>
   </div>
 
   <div id="resultArea" style="display:none;">
@@ -597,20 +595,37 @@ function renderCvssTab(dep) {
   return html;
 }
 
-function severityLines(dep) {
-  const lines = [];
+function severityReasonLines(dep) {
   if (dep.escalated) {
-    lines.push("Base severity is " + dep.base_severity + " from CVSS analysis. A behavioral anomaly was detected, escalating it by one tier to " + dep.severity + ".");
-  } else if (dep.anomaly_flagged) {
-    lines.push("Base severity is " + dep.base_severity + " from CVSS analysis. A behavioral anomaly was also detected, but " + dep.severity + " was already at the top of the scale, so it could not escalate further.");
-  } else {
-    lines.push("Base severity is " + dep.base_severity + " from CVSS analysis and stayed at " + dep.severity + ", since no behavioral anomaly was detected.");
+    return ["Base severity is " + dep.base_severity + " from CVSS analysis. A behavioral anomaly was detected, escalating it by one tier to " + dep.severity + "."];
   }
-  if (dep.cvss.summary) lines.push("How this could be exploited. " + dep.cvss.summary);
-  lines.push("Contextual risk score " + dep.risk_score.toFixed(2) + " from the Random Forest classifier.");
+  if (dep.anomaly_flagged) {
+    return ["Base severity is " + dep.base_severity + " from CVSS analysis. A behavioral anomaly was also detected, but " + dep.severity + " was already at the top of the scale, so it could not escalate further."];
+  }
+  return ["Base severity is " + dep.base_severity + " from CVSS analysis and stayed at " + dep.severity + ", since no behavioral anomaly was detected."];
+}
+
+function exploitSummaryLines(dep) {
+  return dep.cvss.summary ? [dep.cvss.summary] : [];
+}
+
+function riskScoreLines(dep) {
+  const lines = ["Contextual risk score " + dep.risk_score.toFixed(2) + " from the Random Forest classifier."];
   const explanation = (dep.shap && dep.shap.classifier && dep.shap.classifier.explanation_text) || "";
   if (explanation) lines.push(explanation);
   return lines;
+}
+
+function renderSeverityTab(dep) {
+  let html = paragraphs(severityReasonLines(dep));
+  const exploitLines = exploitSummaryLines(dep);
+  if (exploitLines.length) {
+    html += "<p class=\"tab-subheading\">How This Could Be Exploited</p>";
+    html += paragraphs(exploitLines);
+  }
+  html += "<p class=\"tab-subheading\">Risk Score Explanation</p>";
+  html += paragraphs(riskScoreLines(dep));
+  return html;
 }
 
 function behavioralLines(dep) {
@@ -695,7 +710,7 @@ function renderCards() {
     const tabs = [
       ["recommendation", "Recommendation", recommendationHtml],
       ["cvss", "CVSS", renderCvssTab(dep)],
-      ["severity", "Severity", paragraphs(severityLines(dep))],
+      ["severity", "Severity", renderSeverityTab(dep)],
       ["behavioral", "Behavioral", renderBehavioralTab(dep)],
     ];
 

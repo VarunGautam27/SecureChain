@@ -208,14 +208,17 @@ def test_severity_tab_shows_attack_summary_when_present():
     }
     html_output = render_html_report(report, ignore_file=_NO_IGNORE_FILE)
 
-    assert "How this could be exploited:" in html_output
+    assert "How This Could Be Exploited" in html_output
     assert "modify Object.prototype" in html_output
+    exploit_pos = html_output.index("How This Could Be Exploited")
+    summary_pos = html_output.index("modify Object.prototype")
+    assert exploit_pos < summary_pos
 
 
 def test_severity_tab_omits_attack_summary_line_when_absent():
     report = _sample_report(1)  # default cvss dict has no "summary" key at all
     html_output = render_html_report(report, ignore_file=_NO_IGNORE_FILE)
-    assert "How this could be exploited:" not in html_output
+    assert "How This Could Be Exploited" not in html_output
 
 
 def test_cvss_tab_shows_epss_and_kev_when_present():

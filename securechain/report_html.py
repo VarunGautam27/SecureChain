@@ -335,17 +335,10 @@ def _render_cvss_tab(dependency: dict) -> str:
     return content
 
 
-def _severity_lines(dependency: dict) -> list[str]:
-    """Severity tab content: the tier decision, why (CVSS + escalation rule), a
-    plain-language description of what an attacker could actually do with this
-    vulnerability (pulled from the advisory's own summary, when one exists - real
-    advisories almost always describe the attack, not just a score), and the SHAP
-    explanation of what drove the Random Forest's risk score - folded in here
-    rather than a separate tab, since it's the same "why this severity" story.
-    """
+def _severity_reason_lines(dependency: dict) -> list[str]:
+    """Why this tier: CVSS base plus the escalation rule, in plain language."""
     base = dependency["base_severity"]
     final = dependency["severity"]
-    risk_score = dependency["risk_score"]
     if dependency["escalated"]:
         reason = (
             f"Base severity is {base} from CVSS analysis. A behavioral anomaly was "
@@ -362,14 +355,45 @@ def _severity_lines(dependency: dict) -> list[str]:
             f"Base severity is {base} from CVSS analysis and stayed at {final}, since no "
             f"behavioral anomaly was detected."
         )
-    classifier_explanation = dependency.get("shap", {}).get("classifier", {}).get("explanation_text", "")
-    lines = [reason]
+    return [reason]
+
+
+def _exploit_summary_lines(dependency: dict) -> list[str]:
+    """What an attacker could actually do, pulled from the advisory's own
+    summary when one exists, real advisories almost always describe the
+    attack itself, not just a score.
+    """
     attack_summary = dependency.get("cvss", {}).get("summary")
-    if attack_summary:
-        lines.append(f"How this could be exploited: {attack_summary}")
-    lines.append(f"Contextual risk score {risk_score:.2f} from the Random Forest classifier.")
-    lines.append(classifier_explanation)
+    return [attack_summary] if attack_summary else []
+
+
+def _risk_score_lines(dependency: dict) -> list[str]:
+    """The Random Forest's own contextual score and its SHAP explanation."""
+    risk_score = dependency["risk_score"]
+    classifier_explanation = dependency.get("shap", {}).get("classifier", {}).get("explanation_text", "")
+    lines = [f"Contextual risk score {risk_score:.2f} from the Random Forest classifier."]
+    if classifier_explanation:
+        lines.append(classifier_explanation)
     return lines
+
+
+def _render_severity_tab(dependency: dict) -> str:
+    """Three visually separated sections, same pattern as the CVSS and
+    Behavioral tabs: the tier decision itself, then, only when each exists,
+    a labeled subheading before what an attacker could actually do and
+    before the Random Forest's own score, rather than one undifferentiated
+    paragraph mixing three different kinds of information together.
+    """
+    content = _paragraphs(_severity_reason_lines(dependency))
+
+    exploit_lines = _exploit_summary_lines(dependency)
+    if exploit_lines:
+        content += '<p class="tab-subheading">How This Could Be Exploited</p>'
+        content += _paragraphs(exploit_lines)
+
+    content += '<p class="tab-subheading">Risk Score Explanation</p>'
+    content += _paragraphs(_risk_score_lines(dependency))
+    return content
 
 
 def _behavioral_lines(dependency: dict) -> list[str]:
@@ -455,7 +479,7 @@ def _render_card(dependency: dict, index: int, ignore_store: dict) -> str:
     tabs = [
         ("recommendation", "Recommendation", _paragraphs([dependency["recommendation"]])),
         ("cvss", "CVSS", _render_cvss_tab(dependency)),
-        ("severity", "Severity", _paragraphs(_severity_lines(dependency))),
+        ("severity", "Severity", _render_severity_tab(dependency)),
         ("behavioral", "Behavioral", _render_behavioral_tab(dependency)),
     ]
 

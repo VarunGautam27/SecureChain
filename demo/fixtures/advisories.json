@@ -1,21 +1,36 @@
 {
   "_comment": "Curated offline cache for demo/package.json, keyed by package@version. References real published advisories (CVE/GHSA IDs) where they exist, used so grading/CI runs are deterministic and don't depend on live network access, rate limits, or a GITHUB_TOKEN. See README 'Offline demo fixtures' section.",
-
-  "lodash@4.17.21": { "status": "no_cve" },
-  "chalk@5.3.0": { "status": "no_cve" },
-  "uuid@9.0.1": { "status": "no_cve" },
-  "debug@4.3.4": { "status": "no_cve" },
-  "semver@7.5.4": { "status": "no_cve" },
-  "commander@11.1.0": { "status": "no_cve" },
-  "dotenv@16.3.1": { "status": "no_cve" },
-  "yargs@17.7.2": { "status": "no_cve" },
-  "picocolors@1.0.0": { "status": "no_cve" },
-
+  "lodash@4.17.21": {
+    "status": "no_cve"
+  },
+  "chalk@5.3.0": {
+    "status": "no_cve"
+  },
+  "uuid@9.0.1": {
+    "status": "no_cve"
+  },
+  "debug@4.3.4": {
+    "status": "no_cve"
+  },
+  "semver@7.5.4": {
+    "status": "no_cve"
+  },
+  "commander@11.1.0": {
+    "status": "no_cve"
+  },
+  "dotenv@16.3.1": {
+    "status": "no_cve"
+  },
+  "yargs@17.7.2": {
+    "status": "no_cve"
+  },
+  "picocolors@1.0.0": {
+    "status": "no_cve"
+  },
   "colors@1.4.1": {
     "status": "no_cve",
     "summary": "No formal CVE was ever filed for this version. In January 2022 the maintainer intentionally sabotaged colors (and the related faker package), pushing an infinite-loop payload as a form of protest, which broke countless downstream builds. It's treated here purely as a behavioral anomaly (single maintainer, an erratic, out-of-pattern release) rather than a CVSS-scored vulnerability - there is no 'fixed version' to upgrade to, since it wasn't a code vulnerability with a patch; remediation is to pin to a pre-incident version (1.4.0) or replace the dependency."
   },
-
   "minimist@1.2.0": {
     "status": "ok",
     "cve_id": "CVE-2020-7598",
@@ -25,8 +40,9 @@
     "source": "github_advisory",
     "summary": "Prototype pollution in minimist allows an attacker to modify Object.prototype via a crafted __proto__ payload passed to the argument parser."
   },
-  "minimist@1.2.6": { "status": "no_cve" },
-
+  "minimist@1.2.6": {
+    "status": "no_cve"
+  },
   "axios@1.5.0": {
     "status": "ok",
     "cve_id": "CVE-2023-45857",
@@ -36,8 +52,9 @@
     "source": "github_advisory",
     "summary": "axios leaks the confidential XSRF-TOKEN cookie value in the Proxy-Authorization header when following a cross-origin redirect, allowing an attacker-controlled proxy target to obtain it."
   },
-  "axios@1.6.0": { "status": "no_cve" },
-
+  "axios@1.6.0": {
+    "status": "no_cve"
+  },
   "moment@2.29.1": {
     "status": "ok",
     "cve_id": "CVE-2022-31129",
@@ -47,8 +64,9 @@
     "source": "github_advisory",
     "summary": "moment's parsing of certain user-controlled date strings has inadequate complexity, allowing a regular-expression-denial-of-service (ReDoS) attack against applications that pass untrusted input to moment's parser."
   },
-  "moment@2.29.4": { "status": "no_cve" },
-
+  "moment@2.29.4": {
+    "status": "no_cve"
+  },
   "xml2js@0.4.19": {
     "status": "ok",
     "cve_id": "GHSA-776f-qq4e-3rc3",
@@ -58,8 +76,9 @@
     "source": "github_advisory",
     "summary": "Prototype pollution in xml2js allows attacker-controlled XML input to modify Object.prototype, potentially leading to denial of service or property injection in the host application."
   },
-  "xml2js@0.5.0": { "status": "no_cve" },
-
+  "xml2js@0.5.0": {
+    "status": "no_cve"
+  },
   "node-ipc@9.2.1": {
     "status": "ok",
     "cve_id": "GHSA-lzc9-3d29-fq7f",
@@ -69,8 +88,9 @@
     "source": "github_advisory",
     "summary": "node-ipc versions 10.1.1 and 9.2.1 through 9.2.2 contained code that, based on the host machine's IP-derived geolocation, either overwrote or deleted arbitrary files on disk (the 2022 'protestware' incident). Treated here as a Critical-severity supply chain compromise, curated with a representative CVSS-equivalent score."
   },
-  "node-ipc@9.2.2": { "status": "no_cve" },
-
+  "node-ipc@9.2.2": {
+    "status": "no_cve"
+  },
   "ansi-regex@5.0.0": {
     "status": "ok",
     "cve_id": "CVE-2021-3807",
@@ -80,8 +100,9 @@
     "source": "github_advisory",
     "summary": "ansi-regex is vulnerable to Regular Expression Denial of Service (ReDoS): an inefficient regular expression used to match ANSI escape codes can be forced into catastrophic backtracking by a crafted, invalid escape sequence, exhausting CPU on the process parsing it."
   },
-  "ansi-regex@5.0.1": { "status": "no_cve" },
-
+  "ansi-regex@5.0.1": {
+    "status": "no_cve"
+  },
   "glob-parent@5.1.1": {
     "status": "ok",
     "cve_id": "CVE-2020-28469",
@@ -91,8 +112,9 @@
     "source": "github_advisory",
     "summary": "The enclosure regex used by glob-parent before 5.1.2 to detect brace/bracket patterns is a non-linear regular expression; a crafted input (e.g. a brace followed by many path separators) triggers catastrophic backtracking, causing a Regular Expression Denial of Service."
   },
-  "glob-parent@5.1.2": { "status": "no_cve" },
-
+  "glob-parent@5.1.2": {
+    "status": "no_cve"
+  },
   "json5@2.2.1": {
     "status": "ok",
     "cve_id": "CVE-2022-46175",
@@ -102,8 +124,9 @@
     "source": "github_advisory",
     "summary": "The parse method of JSON5 before 2.2.2 does not restrict parsing of keys named __proto__, so a specially crafted JSON5 string can pollute Object.prototype of the resulting object, potentially leading to denial of service or, depending on how the polluted object is later used, further application-level compromise."
   },
-  "json5@2.2.2": { "status": "no_cve" },
-
+  "json5@2.2.2": {
+    "status": "no_cve"
+  },
   "word-wrap@1.2.3": {
     "status": "ok",
     "cve_id": "CVE-2023-26115",
@@ -113,8 +136,9 @@
     "source": "github_advisory",
     "summary": "word-wrap uses an insecure regular expression when trimming trailing whitespace; a specially crafted input string triggers catastrophic backtracking in that regex, causing a Regular Expression Denial of Service on the process handling it."
   },
-  "word-wrap@1.2.4": { "status": "no_cve" },
-
+  "word-wrap@1.2.4": {
+    "status": "no_cve"
+  },
   "tar@6.1.0": {
     "status": "ok",
     "cve_id": "CVE-2021-32804",
@@ -124,8 +148,9 @@
     "source": "github_advisory",
     "summary": "node-tar before 6.1.1 insufficiently sanitizes absolute paths inside an archive: a file path with a repeated path root (e.g. multiple leading slashes) has only a single root stripped, so extraction can still resolve to an absolute path outside the intended directory, allowing arbitrary file creation or overwrite."
   },
-  "tar@6.1.1": { "status": "no_cve" },
-
+  "tar@6.1.1": {
+    "status": "no_cve"
+  },
   "pyyaml@5.3.1": {
     "status": "ok",
     "cve_id": "CVE-2020-14343",
@@ -133,11 +158,14 @@
     "severity_label": null,
     "fixed_version": "5.4",
     "source": "github_advisory",
-    "cwes": ["CWE-20"],
+    "cwes": [
+      "CWE-20"
+    ],
     "summary": "PyYAML before 5.4 is vulnerable to arbitrary code execution when it processes untrusted YAML through full_load or the FullLoader loader. The python/object/new constructor tag lets an attacker instantiate an arbitrary Python class, including ones from the subprocess module, achieving code execution."
   },
-  "pyyaml@5.4": { "status": "no_cve" },
-
+  "pyyaml@5.4": {
+    "status": "no_cve"
+  },
   "pillow@8.4.0": {
     "status": "ok",
     "cve_id": "CVE-2022-22817",
@@ -145,11 +173,14 @@
     "severity_label": null,
     "fixed_version": "9.0.0",
     "source": "github_advisory",
-    "cwes": ["CWE-95"],
+    "cwes": [
+      "CWE-95"
+    ],
     "summary": "PIL.ImageMath.eval in Pillow before 9.0.0 allows evaluation of arbitrary expressions, including ones that call Python builtins such as exec, eval, and __import__, allowing arbitrary code execution."
   },
-  "pillow@9.0.0": { "status": "no_cve" },
-
+  "pillow@9.0.0": {
+    "status": "no_cve"
+  },
   "urllib3@1.26.16": {
     "status": "ok",
     "cve_id": "CVE-2023-43804",
@@ -157,11 +188,14 @@
     "severity_label": null,
     "fixed_version": "1.26.17",
     "source": "github_advisory",
-    "cwes": ["CWE-200"],
+    "cwes": [
+      "CWE-200"
+    ],
     "summary": "urllib3 does not strip the Cookie request header when following a cross origin redirect, leaking any cookie set by the caller to the redirect target, potentially exposing session or authentication tokens to an unrelated domain."
   },
-  "urllib3@1.26.17": { "status": "no_cve" },
-
+  "urllib3@1.26.17": {
+    "status": "no_cve"
+  },
   "jinja2@3.1.2": {
     "status": "ok",
     "cve_id": "CVE-2024-22195",
@@ -169,11 +203,14 @@
     "severity_label": null,
     "fixed_version": "3.1.3",
     "source": "github_advisory",
-    "cwes": ["CWE-79"],
+    "cwes": [
+      "CWE-79"
+    ],
     "summary": "The xmlattr filter in Jinja2 before 3.1.3 does not validate keys, so a key containing spaces coming from user input can be used to inject arbitrary HTML attributes into a template, bypassing autoescaping and enabling cross site scripting."
   },
-  "jinja2@3.1.3": { "status": "no_cve" },
-
+  "jinja2@3.1.3": {
+    "status": "no_cve"
+  },
   "werkzeug@2.2.2": {
     "status": "ok",
     "cve_id": "CVE-2023-25577",
@@ -181,13 +218,33 @@
     "severity_label": null,
     "fixed_version": "2.2.3",
     "source": "github_advisory",
-    "cwes": ["CWE-400"],
+    "cwes": [
+      "CWE-400"
+    ],
     "summary": "Werkzeug's multipart form data parser before 2.2.3 parses an unlimited number of parts, including file parts. A crafted request with a very large number of parts consumes CPU, memory, or file handles, blocking worker processes or crashing the process, a denial of service."
   },
-  "werkzeug@2.2.3": { "status": "no_cve" },
-
-  "certifi@2024.2.2": { "status": "no_cve" },
-  "idna@3.6": { "status": "no_cve" },
-  "charset-normalizer@3.3.2": { "status": "no_cve" },
-  "six@1.16.0": { "status": "no_cve" }
+  "werkzeug@2.2.3": {
+    "status": "no_cve"
+  },
+  "certifi@2024.2.2": {
+    "status": "no_cve"
+  },
+  "idna@3.6": {
+    "status": "no_cve"
+  },
+  "charset-normalizer@3.3.2": {
+    "status": "no_cve"
+  },
+  "six@1.16.0": {
+    "status": "no_cve"
+  },
+  "canvas@3.2.3": {
+    "status": "no_cve"
+  },
+  "iniconfig@2.0.0": {
+    "status": "no_cve"
+  },
+  "dlib@20.0.1": {
+    "status": "no_cve"
+  }
 }

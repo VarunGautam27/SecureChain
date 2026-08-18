@@ -1,0 +1,89 @@
+{
+  "canvas@3.2.3": {
+    "severity": "High",
+    "static_scan": {
+      "status": "ok",
+      "flagged": true,
+      "flag_reason": "install_hook",
+      "indicators": [
+        "defines an install-time script (preinstall/install/postinstall)",
+        "uses child_process to spawn system commands",
+        "contains a hardcoded IP address (102.0.0.0)"
+      ],
+      "files_scanned": 13,
+      "ml_risk_score": 0.9974711029909195,
+      "ml_explanation": {
+        "attributions": [
+          {
+            "feature": "category_count",
+            "value": 2.0,
+            "shap_value": 0.09381445932607346
+          },
+          {
+            "feature": "has_install_hook",
+            "value": 1.0,
+            "shap_value": 0.4558298801121962
+          },
+          {
+            "feature": "taint_chain_confirmed",
+            "value": 0.0,
+            "shap_value": -0.04793610272917645
+          },
+          {
+            "feature": "files_scanned",
+            "value": 13.0,
+            "shap_value": -0.0020820107409470724
+          }
+        ],
+        "base_value": 0.497844877022765,
+        "model_output": 0.9974711029909111,
+        "top_feature": "has_install_hook",
+        "explanation_text": "Flagged due to an install-time script (preinstall/install/postinstall) and multiple distinct suspicious code indicators present at once."
+      }
+    },
+    "recommendation": "No CVE ID exists for canvas - it has not been catalogued as vulnerable anywhere. However, static analysis found a suspicious pattern inside an install-time script, which runs automatically the moment this package is installed, before it is even used. Manually review that install script before allowing this dependency in your tree. A known alternative: skia-canvas is a real, actively-maintained alternative offering a similar Canvas-API surface (uses Skia instead of Cairo) - verify it fits your exact use case before switching, it is not a guaranteed drop-in replacement."
+  },
+  "dlib@20.0.1": {
+    "severity": "High",
+    "static_scan": {
+      "status": "ok",
+      "flagged": true,
+      "flag_reason": "install_hook",
+      "indicators": [
+        "defines an install-time script (preinstall/install/postinstall)",
+        "uses the subprocess module"
+      ],
+      "files_scanned": 22,
+      "ml_risk_score": 0.9943248870205806,
+      "ml_explanation": {
+        "attributions": [
+          {
+            "feature": "category_count",
+            "value": 1.0,
+            "shap_value": 0.09392624286270479
+          },
+          {
+            "feature": "has_install_hook",
+            "value": 1.0,
+            "shap_value": 0.4507653396226877
+          },
+          {
+            "feature": "taint_chain_confirmed",
+            "value": 0.0,
+            "shap_value": -0.050789234091887465
+          },
+          {
+            "feature": "files_scanned",
+            "value": 22.0,
+            "shap_value": 0.0025776616043026086
+          }
+        ],
+        "base_value": 0.497844877022765,
+        "model_output": 0.9943248870205726,
+        "top_feature": "has_install_hook",
+        "explanation_text": "Flagged due to an install-time script (preinstall/install/postinstall) and multiple distinct suspicious code indicators present at once."
+      }
+    },
+    "recommendation": "No CVE ID exists for dlib - it has not been catalogued as vulnerable anywhere. However, static analysis found a suspicious pattern inside an install-time script, which runs automatically the moment this package is installed, before it is even used. Manually review that install script before allowing this dependency in your tree. No specific alternative is suggested here - this tool does not have verified knowledge of this package's purpose, so search for an actively-maintained library providing equivalent functionality rather than trust an invented suggestion."
+  }
+}

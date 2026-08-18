@@ -9,16 +9,19 @@ from securechain.pipeline import run_scan
 from securechain.report_html import render_html_report
 
 EXPECTED_SEVERITIES = {
-    "lodash": "Safe",
-    "chalk": "Safe",
-    "uuid": "Safe",
-    "debug": "Safe",
-    "semver": "Safe",
-    "commander": "Safe",
-    "dotenv": "Safe",
-    "yargs": "Safe",
-    "picocolors": "Safe",
-    "colors": "Low",
+    # No catalogued CVE, and this test runs offline (cache-dir/offline=True),
+    # so none of these can be verified via a static scan - they correctly
+    # show Unverified, never a false "Safe", since nobody has checked them.
+    "lodash": "Unverified",
+    "chalk": "Unverified",
+    "uuid": "Unverified",
+    "debug": "Unverified",
+    "semver": "Unverified",
+    "commander": "Unverified",
+    "dotenv": "Unverified",
+    "yargs": "Unverified",
+    "picocolors": "Unverified",
+    "colors": "Unverified",
     "minimist": "Medium",
     "axios": "Medium",
     "moment": "High",
@@ -31,11 +34,14 @@ EXPECTED_SEVERITIES = {
     "tar": "High",
 }
 
-# Every non-Safe dependency here has no accepted exception in a nonexistent
-# ignore file, so all 11 must block under the default "safe" threshold.
+# Every dependency here is either a catalogued CVE or genuinely Unverified
+# (no CVE, not yet static-scanned) - both block under the default "safe"
+# threshold unless explicitly accepted, since neither is a confirmed-clean
+# Safe result.
 _EXPECTED_BLOCKERS = [
-    "colors", "minimist", "axios", "moment", "xml2js", "node-ipc",
-    "ansi-regex", "glob-parent", "json5", "word-wrap", "tar",
+    "lodash", "chalk", "uuid", "debug", "semver", "commander", "dotenv",
+    "yargs", "picocolors", "colors", "minimist", "axios", "moment", "xml2js",
+    "node-ipc", "ansi-regex", "glob-parent", "json5", "word-wrap", "tar",
 ]
 
 # minimist/axios/moment carry a real CVE ID in the demo fixtures, so exploit
@@ -80,13 +86,13 @@ def test_end_to_end_demo_pipeline_matches_documented_severities(demo_manifest_pa
         assert any(package in failure for failure in gate_result.failures)
 
     # HTML report renders without error, includes every dependency, and sorts
-    # worst severity first (xml2js/node-ipc Critical) down to safest last
-    # (the 9 Safe packages).
+    # worst severity first (xml2js/node-ipc Critical), then High, then Medium,
+    # then the Unverified (no CVE, not yet scanned) packages last.
     html_output = render_html_report(report, ignore_file="does-not-exist.json")
     for package in EXPECTED_SEVERITIES:
         assert package in html_output
     positions = {pkg: html_output.index(f'data-package="{pkg}"') for pkg in EXPECTED_SEVERITIES}
-    assert positions["xml2js"] < positions["moment"] < positions["minimist"] < positions["colors"] < positions["lodash"]
+    assert positions["xml2js"] < positions["moment"] < positions["minimist"] < positions["colors"]
 
 
 PYPI_EXPECTED_SEVERITIES = {
@@ -95,10 +101,12 @@ PYPI_EXPECTED_SEVERITIES = {
     "werkzeug": "High",
     "urllib3": "Medium",
     "jinja2": "Medium",
-    "certifi": "Safe",
-    "idna": "Safe",
-    "charset-normalizer": "Safe",
-    "six": "Safe",
+    # No catalogued CVE, and this test runs offline, so these correctly show
+    # Unverified rather than a false "Safe" - nobody has actually checked them.
+    "certifi": "Unverified",
+    "idna": "Unverified",
+    "charset-normalizer": "Unverified",
+    "six": "Unverified",
 }
 
 
@@ -113,17 +121,20 @@ def test_end_to_end_pypi_demo_pipeline_matches_documented_severities(demo_pypi_m
 
     assert all(dep["ecosystem"] == "pypi" for dep in report["dependencies"])
 
-    # Every flagged dependency here has a real CVE, so exploit intelligence
-    # should resolve for all of them, and none are on CISA's KEV catalog.
+    # Every dependency with a real catalogued CVE here should have exploit
+    # intelligence resolved, and none are on CISA's KEV catalog. Unverified
+    # dependencies have no CVE at all, so exploit intel doesn't apply to them.
     for dep in report["dependencies"]:
-        if dep["severity"] != "Safe":
+        if dep["lookup_status"] == "ok":
             assert dep["exploit_intel"]["status"] == "ok"
             assert dep["exploit_intel"]["in_kev"] is False
             assert dep["cvss"]["cwes"], f"{dep['package']} should carry a CWE category"
 
     gate_result = evaluate_gate(report, ignore_file="does-not-exist.json")
     assert gate_result.exit_code != 0
-    assert len(gate_result.failures) == 5  # pyyaml, pillow, werkzeug, urllib3, jinja2
+    # pyyaml, pillow, werkzeug, urllib3, jinja2 (real CVEs) plus certifi, idna,
+    # charset-normalizer, six (Unverified - no CVE, not yet static-scanned).
+    assert len(gate_result.failures) == 9
 
 
 def test_include_transitive_adds_lockfile_only_dependencies(demo_manifest_path, demo_cache_dir, tmp_path):

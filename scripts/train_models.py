@@ -17,7 +17,8 @@ from pathlib import Path
 
 from securechain.ml.anomaly import save_anomaly_detector, train_anomaly_detector
 from securechain.ml.classifier import save_classifier, train_classifier
-from securechain.ml.training_data import generate_synthetic_dataset
+from securechain.ml.static_classifier import save_static_classifier, train_static_classifier
+from securechain.ml.training_data import generate_static_scan_dataset, generate_synthetic_dataset
 
 MODELS_DIR = Path(__file__).resolve().parent.parent / "models"
 BASELINE_METRICS_PATH = MODELS_DIR / "baseline_metrics.json"
@@ -34,6 +35,12 @@ def main() -> None:
     anomaly_model = train_anomaly_detector(dataset)
     save_anomaly_detector(anomaly_model)
     print("Isolation Forest anomaly detector trained.")
+
+    static_scan_dataset = generate_static_scan_dataset()
+    static_classifier, static_metrics = train_static_classifier(static_scan_dataset)
+    save_static_classifier(static_classifier)
+    print(f"Static-scan classifier trained: precision={static_metrics['precision']:.3f} "
+          f"recall={static_metrics['recall']:.3f} f1={static_metrics['f1']:.3f}")
 
     MODELS_DIR.mkdir(parents=True, exist_ok=True)
     BASELINE_METRICS_PATH.write_text(json.dumps(metrics, indent=2) + "\n", encoding="utf-8")

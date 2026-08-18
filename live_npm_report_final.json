@@ -1,0 +1,1145 @@
+{
+  "scan_date": "2026-08-12T11:39:42.186540+00:00",
+  "manifest_path": "demo/package.json",
+  "scanned_by": "LENONO",
+  "summary": {
+    "total": 11,
+    "critical": 4,
+    "high": 5,
+    "medium": 1,
+    "low": 0,
+    "safe": 0,
+    "unverified": 1
+  },
+  "dependencies": [
+    {
+      "package": "lodash",
+      "version": "4.17.21",
+      "ecosystem": "npm",
+      "is_direct": true,
+      "lookup_status": "ok",
+      "cvss": {
+        "score": 8.1,
+        "cve_id": "CVE-2026-4800",
+        "source": "github_advisory",
+        "fixed_version": "4.18.0",
+        "severity_label": "HIGH",
+        "summary": "lodash vulnerable to Code Injection via `_.template` imports key names",
+        "cwes": [
+          "CWE-94"
+        ]
+      },
+      "severity": "High",
+      "recommendation": "Upgrade lodash to version 4.18.0 or later to remediate CVE-2026-4800.",
+      "exploit_intel": {
+        "status": "ok",
+        "epss_score": 0.02566,
+        "epss_percentile": 0.83671,
+        "in_kev": false,
+        "kev_date_added": null,
+        "source": "epss_kev_live",
+        "summary": null
+      },
+      "scorecard": {
+        "status": "ok",
+        "score": 7.2,
+        "checks": [
+          {
+            "name": "Binary-Artifacts",
+            "score": 10
+          },
+          {
+            "name": "Branch-Protection",
+            "score": -1
+          },
+          {
+            "name": "CI-Tests",
+            "score": 8
+          },
+          {
+            "name": "CII-Best-Practices",
+            "score": 0
+          },
+          {
+            "name": "Code-Review",
+            "score": 7
+          }
+        ],
+        "repo": "lodash/lodash",
+        "source": "scorecard_api",
+        "summary": null
+      },
+      "static_scan": {
+        "status": "not_run",
+        "flagged": false,
+        "flag_reason": null,
+        "indicators": [],
+        "files_scanned": 0,
+        "ml_risk_score": null,
+        "ml_explanation": null
+      },
+      "behavioral": {
+        "release_frequency_deviation": 4.108926201583642,
+        "maintainer_count": 1,
+        "version_jump_irregularity": 3.785449954570202,
+        "download_age_ratio": 32142.50574119326,
+        "status": "ok"
+      },
+      "anomaly_flagged": true,
+      "anomaly_explanation": {
+        "attributions": [
+          {
+            "feature": "release_frequency_deviation",
+            "value": 4.108926201583642,
+            "shap_value": -0.08482081968032151
+          },
+          {
+            "feature": "maintainer_count",
+            "value": 1.0,
+            "shap_value": 0.0
+          },
+          {
+            "feature": "version_jump_irregularity",
+            "value": 3.785449954570202,
+            "shap_value": -0.07376415892208626
+          },
+          {
+            "feature": "download_age_ratio",
+            "value": 32142.50574119326,
+            "shap_value": -0.0032406168866255247
+          }
+        ],
+        "base_value": -0.5441257840186833,
+        "model_output": -0.7059513795077166,
+        "top_feature": "release_frequency_deviation",
+        "explanation_text": "Flagged due to an unusual release spike and an irregular version jump between releases."
+      }
+    },
+    {
+      "package": "chalk",
+      "version": "5.3.0",
+      "ecosystem": "npm",
+      "is_direct": true,
+      "lookup_status": "no_cve",
+      "cvss": {
+        "score": null,
+        "cve_id": null,
+        "source": "nvd",
+        "fixed_version": null,
+        "severity_label": null,
+        "summary": null,
+        "cwes": []
+      },
+      "severity": "Unverified",
+      "recommendation": "No CVE ID exists for chalk at this version - it has not been catalogued as vulnerable anywhere. This does not confirm it is safe - run a static code scan to check its real published source before proceeding.",
+      "exploit_intel": {
+        "status": "not_applicable",
+        "epss_score": null,
+        "epss_percentile": null,
+        "in_kev": false,
+        "kev_date_added": null,
+        "source": null,
+        "summary": null
+      },
+      "scorecard": {
+        "status": "ok",
+        "score": 4.6,
+        "checks": [
+          {
+            "name": "Code-Review",
+            "score": 3
+          },
+          {
+            "name": "Maintained",
+            "score": 8
+          },
+          {
+            "name": "Dangerous-Workflow",
+            "score": 10
+          },
+          {
+            "name": "Token-Permissions",
+            "score": 0
+          },
+          {
+            "name": "Packaging",
+            "score": -1
+          }
+        ],
+        "repo": "chalk/chalk",
+        "source": "scorecard_api",
+        "summary": null
+      },
+      "static_scan": {
+        "status": "not_run",
+        "flagged": false,
+        "flag_reason": null,
+        "indicators": [],
+        "files_scanned": 0,
+        "ml_risk_score": null,
+        "ml_explanation": null
+      },
+      "behavioral": {
+        "release_frequency_deviation": 1.1852166834567561,
+        "maintainer_count": 1,
+        "version_jump_irregularity": 2.439290772396357,
+        "download_age_ratio": 103145.75399789235,
+        "status": "ok"
+      },
+      "anomaly_flagged": false,
+      "anomaly_explanation": {
+        "attributions": [
+          {
+            "feature": "release_frequency_deviation",
+            "value": 1.1852166834567561,
+            "shap_value": 0.04285822872326627
+          },
+          {
+            "feature": "maintainer_count",
+            "value": 1.0,
+            "shap_value": 0.0
+          },
+          {
+            "feature": "version_jump_irregularity",
+            "value": 2.439290772396357,
+            "shap_value": -0.00549270942825161
+          },
+          {
+            "feature": "download_age_ratio",
+            "value": 103145.75399789235,
+            "shap_value": -0.024863306344805738
+          }
+        ],
+        "base_value": -0.5441257840186833,
+        "model_output": -0.5316235710684744,
+        "top_feature": "release_frequency_deviation",
+        "explanation_text": "Not flagged. Primary contributing factors were a steady release cadence and an unusual download to age ratio."
+      }
+    },
+    {
+      "package": "uuid",
+      "version": "9.0.1",
+      "ecosystem": "npm",
+      "is_direct": true,
+      "lookup_status": "ok",
+      "cvss": {
+        "score": 7.5,
+        "cve_id": "CVE-2026-41907",
+        "source": "github_advisory",
+        "fixed_version": "11.1.1",
+        "severity_label": "MODERATE",
+        "summary": "uuid: Missing buffer bounds check in v3/v5/v6 when buf is provided",
+        "cwes": [
+          "CWE-787",
+          "CWE-1285"
+        ]
+      },
+      "severity": "High",
+      "recommendation": "Upgrade uuid to version 11.1.1 or later to remediate CVE-2026-41907.",
+      "exploit_intel": {
+        "status": "ok",
+        "epss_score": 0.00337,
+        "epss_percentile": 0.26381,
+        "in_kev": false,
+        "kev_date_added": null,
+        "source": "epss_kev_live",
+        "summary": null
+      },
+      "scorecard": {
+        "status": "ok",
+        "score": 4.5,
+        "checks": [
+          {
+            "name": "Code-Review",
+            "score": 3
+          },
+          {
+            "name": "Dangerous-Workflow",
+            "score": 0
+          },
+          {
+            "name": "Maintained",
+            "score": 10
+          },
+          {
+            "name": "Security-Policy",
+            "score": 0
+          },
+          {
+            "name": "Binary-Artifacts",
+            "score": 10
+          }
+        ],
+        "repo": "uuidjs/uuid",
+        "source": "scorecard_api",
+        "summary": null
+      },
+      "static_scan": {
+        "status": "not_run",
+        "flagged": false,
+        "flag_reason": null,
+        "indicators": [],
+        "files_scanned": 0,
+        "ml_risk_score": null,
+        "ml_explanation": null
+      },
+      "behavioral": {
+        "release_frequency_deviation": 1.6346714346245033,
+        "maintainer_count": 2,
+        "version_jump_irregularity": 1.858381030159006,
+        "download_age_ratio": 49062.044950023665,
+        "status": "ok"
+      },
+      "anomaly_flagged": false,
+      "anomaly_explanation": {
+        "attributions": [
+          {
+            "feature": "release_frequency_deviation",
+            "value": 1.6346714346245033,
+            "shap_value": 0.026902900662190792
+          },
+          {
+            "feature": "maintainer_count",
+            "value": 2.0,
+            "shap_value": 0.04007970413428769
+          },
+          {
+            "feature": "version_jump_irregularity",
+            "value": 1.858381030159006,
+            "shap_value": 0.027327904232519674
+          },
+          {
+            "feature": "download_age_ratio",
+            "value": 49062.044950023665,
+            "shap_value": -0.011479807502828385
+          }
+        ],
+        "base_value": -0.5441257840186833,
+        "model_output": -0.4612950824925135,
+        "top_feature": "maintainer_count",
+        "explanation_text": "Not flagged. Primary contributing factors were a healthy maintainer pool of 2 maintainers and consistent version increments."
+      }
+    },
+    {
+      "package": "debug",
+      "version": "4.3.4",
+      "ecosystem": "npm",
+      "is_direct": true,
+      "lookup_status": "ok",
+      "cvss": {
+        "score": 10.0,
+        "cve_id": "CVE-1999-0095",
+        "source": "nvd",
+        "fixed_version": null,
+        "severity_label": null,
+        "summary": "Best-effort NVD keyword match; not version-range verified.",
+        "cwes": []
+      },
+      "severity": "Critical",
+      "recommendation": "No fix available for CVE-1999-0095. Manual mitigation required, such as replacing the dependency or applying a vendor patch.",
+      "exploit_intel": {
+        "status": "ok",
+        "epss_score": 0.16446,
+        "epss_percentile": 0.96682,
+        "in_kev": false,
+        "kev_date_added": null,
+        "source": "epss_kev_live",
+        "summary": null
+      },
+      "scorecard": {
+        "status": "ok",
+        "score": 2.6,
+        "checks": [
+          {
+            "name": "Code-Review",
+            "score": 4
+          },
+          {
+            "name": "Token-Permissions",
+            "score": -1
+          },
+          {
+            "name": "Pinned-Dependencies",
+            "score": -1
+          },
+          {
+            "name": "Dangerous-Workflow",
+            "score": -1
+          },
+          {
+            "name": "Packaging",
+            "score": -1
+          }
+        ],
+        "repo": "debug-js/debug",
+        "source": "scorecard_api",
+        "summary": null
+      },
+      "static_scan": {
+        "status": "not_run",
+        "flagged": false,
+        "flag_reason": null,
+        "indicators": [],
+        "files_scanned": 0,
+        "ml_risk_score": null,
+        "ml_explanation": null
+      },
+      "behavioral": {
+        "release_frequency_deviation": 2.063384408012336,
+        "maintainer_count": 2,
+        "version_jump_irregularity": 2.267786955239876,
+        "download_age_ratio": 127548.10311972135,
+        "status": "ok"
+      },
+      "anomaly_flagged": false,
+      "anomaly_explanation": {
+        "attributions": [
+          {
+            "feature": "release_frequency_deviation",
+            "value": 2.063384408012336,
+            "shap_value": 0.005968889415000144
+          },
+          {
+            "feature": "maintainer_count",
+            "value": 2.0,
+            "shap_value": 0.035404783108777454
+          },
+          {
+            "feature": "version_jump_irregularity",
+            "value": 2.267786955239876,
+            "shap_value": -0.00280160632044232
+          },
+          {
+            "feature": "download_age_ratio",
+            "value": 127548.10311972135,
+            "shap_value": -0.03084670077588855
+          }
+        ],
+        "base_value": -0.5441257840186833,
+        "model_output": -0.5364004185912365,
+        "top_feature": "maintainer_count",
+        "explanation_text": "Not flagged. Primary contributing factors were a healthy maintainer pool of 2 maintainers and an unusual download to age ratio."
+      }
+    },
+    {
+      "package": "canvas",
+      "version": "3.2.3",
+      "ecosystem": "npm",
+      "is_direct": true,
+      "lookup_status": "ok",
+      "cvss": {
+        "score": 10.0,
+        "cve_id": "CVE-2010-2900",
+        "source": "nvd",
+        "fixed_version": null,
+        "severity_label": null,
+        "summary": "Best-effort NVD keyword match; not version-range verified.",
+        "cwes": []
+      },
+      "severity": "Critical",
+      "recommendation": "No fix available for CVE-2010-2900. Manual mitigation required, such as replacing the dependency or applying a vendor patch.",
+      "exploit_intel": {
+        "status": "ok",
+        "epss_score": 0.0103,
+        "epss_percentile": 0.60529,
+        "in_kev": false,
+        "kev_date_added": null,
+        "source": "epss_kev_live",
+        "summary": null
+      },
+      "scorecard": {
+        "status": "ok",
+        "score": 3.3,
+        "checks": [
+          {
+            "name": "Code-Review",
+            "score": 1
+          },
+          {
+            "name": "Dangerous-Workflow",
+            "score": 10
+          },
+          {
+            "name": "Maintained",
+            "score": 10
+          },
+          {
+            "name": "Packaging",
+            "score": -1
+          },
+          {
+            "name": "Binary-Artifacts",
+            "score": 10
+          }
+        ],
+        "repo": "Automattic/node-canvas",
+        "source": "scorecard_api",
+        "summary": null
+      },
+      "static_scan": {
+        "status": "not_run",
+        "flagged": false,
+        "flag_reason": null,
+        "indicators": [],
+        "files_scanned": 0,
+        "ml_risk_score": null,
+        "ml_explanation": null
+      },
+      "behavioral": {
+        "release_frequency_deviation": 1.8072815397571504,
+        "maintainer_count": 8,
+        "version_jump_irregularity": 2.8568729930722494,
+        "download_age_ratio": 1408.7076991278216,
+        "status": "ok"
+      },
+      "anomaly_flagged": true,
+      "anomaly_explanation": {
+        "attributions": [
+          {
+            "feature": "release_frequency_deviation",
+            "value": 1.8072815397571504,
+            "shap_value": 0.0183243754869418
+          },
+          {
+            "feature": "maintainer_count",
+            "value": 8.0,
+            "shap_value": -0.06251993084849451
+          },
+          {
+            "feature": "version_jump_irregularity",
+            "value": 2.8568729930722494,
+            "shap_value": -0.0423096936144714
+          },
+          {
+            "feature": "download_age_ratio",
+            "value": 1408.7076991278216,
+            "shap_value": 0.0017835377761399734
+          }
+        ],
+        "base_value": -0.5441257840186833,
+        "model_output": -0.6288474952185674,
+        "top_feature": "maintainer_count",
+        "explanation_text": "Flagged due to a small maintainer pool of 8 maintainers and an irregular version jump between releases."
+      }
+    },
+    {
+      "package": "minimist",
+      "version": "1.2.0",
+      "ecosystem": "npm",
+      "is_direct": true,
+      "lookup_status": "ok",
+      "cvss": {
+        "score": 9.8,
+        "cve_id": "CVE-2021-44906",
+        "source": "github_advisory",
+        "fixed_version": "1.2.6",
+        "severity_label": "CRITICAL",
+        "summary": "Prototype Pollution in minimist",
+        "cwes": [
+          "CWE-1321"
+        ]
+      },
+      "severity": "Critical",
+      "recommendation": "Upgrade minimist to version 1.2.6 or later to remediate CVE-2021-44906.",
+      "exploit_intel": {
+        "status": "ok",
+        "epss_score": 0.04581,
+        "epss_percentile": 0.90762,
+        "in_kev": false,
+        "kev_date_added": null,
+        "source": "epss_kev_live",
+        "summary": null
+      },
+      "scorecard": {
+        "status": "ok",
+        "score": 5.3,
+        "checks": [
+          {
+            "name": "Maintained",
+            "score": 0
+          },
+          {
+            "name": "Binary-Artifacts",
+            "score": 10
+          },
+          {
+            "name": "Packaging",
+            "score": -1
+          },
+          {
+            "name": "Dangerous-Workflow",
+            "score": 10
+          },
+          {
+            "name": "Code-Review",
+            "score": 3
+          }
+        ],
+        "repo": "minimistjs/minimist",
+        "source": "scorecard_api",
+        "summary": null
+      },
+      "static_scan": {
+        "status": "not_run",
+        "flagged": false,
+        "flag_reason": null,
+        "indicators": [],
+        "files_scanned": 0,
+        "ml_risk_score": null,
+        "ml_explanation": null
+      },
+      "behavioral": {
+        "release_frequency_deviation": 2.704427356309656,
+        "maintainer_count": 3,
+        "version_jump_irregularity": 1.9832421857064735,
+        "download_age_ratio": 31102.34226017022,
+        "status": "ok"
+      },
+      "anomaly_flagged": false,
+      "anomaly_explanation": {
+        "attributions": [
+          {
+            "feature": "release_frequency_deviation",
+            "value": 2.704427356309656,
+            "shap_value": -0.032297211102274036
+          },
+          {
+            "feature": "maintainer_count",
+            "value": 3.0,
+            "shap_value": 0.04895974929649949
+          },
+          {
+            "feature": "version_jump_irregularity",
+            "value": 1.9832421857064735,
+            "shap_value": 0.015671842380895494
+          },
+          {
+            "feature": "download_age_ratio",
+            "value": 31102.34226017022,
+            "shap_value": -0.002852906972078406
+          }
+        ],
+        "base_value": -0.5441257840186833,
+        "model_output": -0.5146443104156407,
+        "top_feature": "maintainer_count",
+        "explanation_text": "Not flagged. Primary contributing factors were a healthy maintainer pool of 3 maintainers and an unusual release spike."
+      }
+    },
+    {
+      "package": "axios",
+      "version": "1.5.0",
+      "ecosystem": "npm",
+      "is_direct": true,
+      "lookup_status": "ok",
+      "cvss": {
+        "score": 7.5,
+        "cve_id": "CVE-2026-44496",
+        "source": "github_advisory",
+        "fixed_version": "1.16.0",
+        "severity_label": "HIGH",
+        "summary": "Axios: Regular Expression Denial of Service (ReDoS) via Cookie Name Injection",
+        "cwes": [
+          "CWE-400",
+          "CWE-1333"
+        ]
+      },
+      "severity": "High",
+      "recommendation": "Upgrade axios to version 1.16.0 or later to remediate CVE-2026-44496.",
+      "exploit_intel": {
+        "status": "ok",
+        "epss_score": 0.00622,
+        "epss_percentile": 0.46592,
+        "in_kev": false,
+        "kev_date_added": null,
+        "source": "epss_kev_live",
+        "summary": null
+      },
+      "scorecard": {
+        "status": "ok",
+        "score": 8.1,
+        "checks": [
+          {
+            "name": "Maintained",
+            "score": 10
+          },
+          {
+            "name": "Dangerous-Workflow",
+            "score": 10
+          },
+          {
+            "name": "Code-Review",
+            "score": 6
+          },
+          {
+            "name": "Security-Policy",
+            "score": 10
+          },
+          {
+            "name": "CII-Best-Practices",
+            "score": 0
+          }
+        ],
+        "repo": "axios/axios",
+        "source": "scorecard_api",
+        "summary": null
+      },
+      "static_scan": {
+        "status": "not_run",
+        "flagged": false,
+        "flag_reason": null,
+        "indicators": [],
+        "files_scanned": 0,
+        "ml_risk_score": null,
+        "ml_explanation": null
+      },
+      "behavioral": {
+        "release_frequency_deviation": 1.6009015425544753,
+        "maintainer_count": 1,
+        "version_jump_irregularity": 2.1315601778631184,
+        "download_age_ratio": 27443.609703751314,
+        "status": "ok"
+      },
+      "anomaly_flagged": false,
+      "anomaly_explanation": {
+        "attributions": [
+          {
+            "feature": "release_frequency_deviation",
+            "value": 1.6009015425544753,
+            "shap_value": 0.03142404739342566
+          },
+          {
+            "feature": "maintainer_count",
+            "value": 1.0,
+            "shap_value": 0.0
+          },
+          {
+            "feature": "version_jump_irregularity",
+            "value": 2.1315601778631184,
+            "shap_value": 0.009630259417223138
+          },
+          {
+            "feature": "download_age_ratio",
+            "value": 27443.609703751314,
+            "shap_value": -0.0006432215284783854
+          }
+        ],
+        "base_value": -0.5441257840186833,
+        "model_output": -0.5037146987365129,
+        "top_feature": "release_frequency_deviation",
+        "explanation_text": "Not flagged. Primary contributing factors were a steady release cadence and consistent version increments."
+      }
+    },
+    {
+      "package": "moment",
+      "version": "2.29.1",
+      "ecosystem": "npm",
+      "is_direct": true,
+      "lookup_status": "ok",
+      "cvss": {
+        "score": 7.5,
+        "cve_id": "CVE-2022-24785",
+        "source": "github_advisory",
+        "fixed_version": "2.29.2",
+        "severity_label": "HIGH",
+        "summary": "Path Traversal: 'dir/../../filename' in moment.locale",
+        "cwes": [
+          "CWE-22",
+          "CWE-27"
+        ]
+      },
+      "severity": "High",
+      "recommendation": "Upgrade moment to version 2.29.2 or later to remediate CVE-2022-24785.",
+      "exploit_intel": {
+        "status": "ok",
+        "epss_score": 0.0552,
+        "epss_percentile": 0.92061,
+        "in_kev": false,
+        "kev_date_added": null,
+        "source": "epss_kev_live",
+        "summary": null
+      },
+      "scorecard": {
+        "status": "ok",
+        "score": 5.3,
+        "checks": [
+          {
+            "name": "Code-Review",
+            "score": 3
+          },
+          {
+            "name": "Packaging",
+            "score": -1
+          },
+          {
+            "name": "Dangerous-Workflow",
+            "score": 10
+          },
+          {
+            "name": "Maintained",
+            "score": 10
+          },
+          {
+            "name": "Token-Permissions",
+            "score": 0
+          }
+        ],
+        "repo": "moment/moment",
+        "source": "scorecard_api",
+        "summary": null
+      },
+      "static_scan": {
+        "status": "not_run",
+        "flagged": false,
+        "flag_reason": null,
+        "indicators": [],
+        "files_scanned": 0,
+        "ml_risk_score": null,
+        "ml_explanation": null
+      },
+      "behavioral": {
+        "release_frequency_deviation": 1.7869669458307882,
+        "maintainer_count": 6,
+        "version_jump_irregularity": 6.2012074939727215,
+        "download_age_ratio": 6610.332601773247,
+        "status": "ok"
+      },
+      "anomaly_flagged": true,
+      "anomaly_explanation": {
+        "attributions": [
+          {
+            "feature": "release_frequency_deviation",
+            "value": 1.7869669458307882,
+            "shap_value": 0.02315376474708298
+          },
+          {
+            "feature": "maintainer_count",
+            "value": 6.0,
+            "shap_value": 0.008209775025719776
+          },
+          {
+            "feature": "version_jump_irregularity",
+            "value": 6.2012074939727215,
+            "shap_value": -0.1254091155104596
+          },
+          {
+            "feature": "download_age_ratio",
+            "value": 6610.332601773247,
+            "shap_value": 0.0027928989952086675
+          }
+        ],
+        "base_value": -0.5441257840186833,
+        "model_output": -0.6353784607611315,
+        "top_feature": "version_jump_irregularity",
+        "explanation_text": "Flagged due to an irregular version jump between releases and a steady release cadence."
+      }
+    },
+    {
+      "package": "tar",
+      "version": "6.1.0",
+      "ecosystem": "npm",
+      "is_direct": true,
+      "lookup_status": "ok",
+      "cvss": {
+        "score": 8.8,
+        "cve_id": "CVE-2026-23950",
+        "source": "github_advisory",
+        "fixed_version": "7.5.4",
+        "severity_label": "HIGH",
+        "summary": "Race Condition in node-tar Path Reservations via Unicode Ligature Collisions on macOS APFS",
+        "cwes": [
+          "CWE-176",
+          "CWE-367"
+        ]
+      },
+      "severity": "High",
+      "recommendation": "Upgrade tar to version 7.5.4 or later to remediate CVE-2026-23950.",
+      "exploit_intel": {
+        "status": "ok",
+        "epss_score": 0.00225,
+        "epss_percentile": 0.13218,
+        "in_kev": false,
+        "kev_date_added": null,
+        "source": "epss_kev_live",
+        "summary": null
+      },
+      "scorecard": {
+        "status": "ok",
+        "score": 6.2,
+        "checks": [
+          {
+            "name": "Dangerous-Workflow",
+            "score": 10
+          },
+          {
+            "name": "Code-Review",
+            "score": 0
+          },
+          {
+            "name": "Maintained",
+            "score": 10
+          },
+          {
+            "name": "CII-Best-Practices",
+            "score": 0
+          },
+          {
+            "name": "Packaging",
+            "score": -1
+          }
+        ],
+        "repo": "isaacs/node-tar",
+        "source": "scorecard_api",
+        "summary": null
+      },
+      "static_scan": {
+        "status": "not_run",
+        "flagged": false,
+        "flag_reason": null,
+        "indicators": [],
+        "files_scanned": 0,
+        "ml_risk_score": null,
+        "ml_explanation": null
+      },
+      "behavioral": {
+        "release_frequency_deviation": 2.2993832827037046,
+        "maintainer_count": 1,
+        "version_jump_irregularity": 2.211380306994832,
+        "download_age_ratio": 15479.44149665883,
+        "status": "ok"
+      },
+      "anomaly_flagged": false,
+      "anomaly_explanation": {
+        "attributions": [
+          {
+            "feature": "release_frequency_deviation",
+            "value": 2.2993832827037046,
+            "shap_value": -0.0029637810380984493
+          },
+          {
+            "feature": "maintainer_count",
+            "value": 1.0,
+            "shap_value": 0.0
+          },
+          {
+            "feature": "version_jump_irregularity",
+            "value": 2.211380306994832,
+            "shap_value": 0.001393806447765729
+          },
+          {
+            "feature": "download_age_ratio",
+            "value": 15479.44149665883,
+            "shap_value": 0.0037261405704530817
+          }
+        ],
+        "base_value": -0.5441257840186833,
+        "model_output": -0.5419696180385629,
+        "top_feature": "download_age_ratio",
+        "explanation_text": "Not flagged. Primary contributing factors were a typical download to age ratio for its age and an unusual release spike."
+      }
+    },
+    {
+      "package": "xml2js",
+      "version": "0.4.19",
+      "ecosystem": "npm",
+      "is_direct": true,
+      "lookup_status": "ok",
+      "cvss": {
+        "score": 5.3,
+        "cve_id": "CVE-2023-0842",
+        "source": "github_advisory",
+        "fixed_version": "0.5.0",
+        "severity_label": "MODERATE",
+        "summary": "xml2js is vulnerable to prototype pollution",
+        "cwes": [
+          "CWE-1321"
+        ]
+      },
+      "severity": "Medium",
+      "recommendation": "Upgrade xml2js to version 0.5.0 or later to remediate CVE-2023-0842.",
+      "exploit_intel": {
+        "status": "ok",
+        "epss_score": 0.01404,
+        "epss_percentile": 0.70038,
+        "in_kev": false,
+        "kev_date_added": null,
+        "source": "epss_kev_live",
+        "summary": null
+      },
+      "scorecard": {
+        "status": "ok",
+        "score": 3.3,
+        "checks": [
+          {
+            "name": "Packaging",
+            "score": -1
+          },
+          {
+            "name": "Token-Permissions",
+            "score": -1
+          },
+          {
+            "name": "Binary-Artifacts",
+            "score": 10
+          },
+          {
+            "name": "Code-Review",
+            "score": 2
+          },
+          {
+            "name": "Pinned-Dependencies",
+            "score": -1
+          }
+        ],
+        "repo": "Leonidas-from-XIV/node-xml2js",
+        "source": "scorecard_api",
+        "summary": null
+      },
+      "static_scan": {
+        "status": "not_run",
+        "flagged": false,
+        "flag_reason": null,
+        "indicators": [],
+        "files_scanned": 0,
+        "ml_risk_score": null,
+        "ml_explanation": null
+      },
+      "behavioral": {
+        "release_frequency_deviation": 2.3098993690969025,
+        "maintainer_count": 1,
+        "version_jump_irregularity": 3.2827308887917233,
+        "download_age_ratio": 7550.998438363092,
+        "status": "ok"
+      },
+      "anomaly_flagged": true,
+      "anomaly_explanation": {
+        "attributions": [
+          {
+            "feature": "release_frequency_deviation",
+            "value": 2.3098993690969025,
+            "shap_value": -0.0014368441697637652
+          },
+          {
+            "feature": "maintainer_count",
+            "value": 1.0,
+            "shap_value": 0.0
+          },
+          {
+            "feature": "version_jump_irregularity",
+            "value": 3.2827308887917233,
+            "shap_value": -0.06758615543423904
+          },
+          {
+            "feature": "download_age_ratio",
+            "value": 7550.998438363092,
+            "shap_value": 0.0028863198802685348
+          }
+        ],
+        "base_value": -0.5441257840186833,
+        "model_output": -0.6102624637424175,
+        "top_feature": "version_jump_irregularity",
+        "explanation_text": "Flagged due to an irregular version jump between releases and a typical download to age ratio for its age."
+      }
+    },
+    {
+      "package": "node-ipc",
+      "version": "9.2.1",
+      "ecosystem": "npm",
+      "is_direct": true,
+      "lookup_status": "ok",
+      "cvss": {
+        "score": 10.0,
+        "cve_id": "CVE-2022-23812",
+        "source": "nvd",
+        "fixed_version": null,
+        "severity_label": null,
+        "summary": "Best-effort NVD keyword match; not version-range verified.",
+        "cwes": []
+      },
+      "severity": "Critical",
+      "recommendation": "No fix available for CVE-2022-23812. Manual mitigation required, such as replacing the dependency or applying a vendor patch.",
+      "exploit_intel": {
+        "status": "ok",
+        "epss_score": 0.0426,
+        "epss_percentile": 0.90141,
+        "in_kev": false,
+        "kev_date_added": null,
+        "source": "epss_kev_live",
+        "summary": null
+      },
+      "scorecard": {
+        "status": "ok",
+        "score": 4,
+        "checks": [
+          {
+            "name": "Dangerous-Workflow",
+            "score": 10
+          },
+          {
+            "name": "Packaging",
+            "score": -1
+          },
+          {
+            "name": "Maintained",
+            "score": 7
+          },
+          {
+            "name": "Token-Permissions",
+            "score": 0
+          },
+          {
+            "name": "Code-Review",
+            "score": 0
+          }
+        ],
+        "repo": "RIAEvangelist/node-ipc",
+        "source": "scorecard_api",
+        "summary": null
+      },
+      "static_scan": {
+        "status": "not_run",
+        "flagged": false,
+        "flag_reason": null,
+        "indicators": [],
+        "files_scanned": 0,
+        "ml_risk_score": null,
+        "ml_explanation": null
+      },
+      "behavioral": {
+        "release_frequency_deviation": 3.190423559763028,
+        "maintainer_count": 1,
+        "version_jump_irregularity": 2.198939408522768,
+        "download_age_ratio": 184.2179460909691,
+        "status": "ok"
+      },
+      "anomaly_flagged": true,
+      "anomaly_explanation": {
+        "attributions": [
+          {
+            "feature": "release_frequency_deviation",
+            "value": 3.190423559763028,
+            "shap_value": -0.06649517777019422
+          },
+          {
+            "feature": "maintainer_count",
+            "value": 1.0,
+            "shap_value": 0.0
+          },
+          {
+            "feature": "version_jump_irregularity",
+            "value": 2.198939408522768,
+            "shap_value": 0.0003172258814161527
+          },
+          {
+            "feature": "download_age_ratio",
+            "value": 184.2179460909691,
+            "shap_value": 0.0
+          }
+        ],
+        "base_value": -0.5441257840186833,
+        "model_output": -0.6103037359074613,
+        "top_feature": "release_frequency_deviation",
+        "explanation_text": "Flagged due to an unusual release spike and consistent version increments."
+      }
+    }
+  ]
+}

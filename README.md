@@ -100,6 +100,11 @@ pip install -e ".[dev]"
 # (writes models/classifier.joblib, models/anomaly.joblib, models/baseline_metrics.json)
 python scripts/train_models.py
 
+# Required for the static scan's npm taint-chain analysis (uses Node.js's
+# acorn parser via a small helper script - Node itself must already be
+# installed to use npm at all). Not needed for the Python-only taint tracer.
+cd securechain/js_ast && npm install && cd ../..
+
 pytest
 ```
 

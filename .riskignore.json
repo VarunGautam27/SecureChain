@@ -1,11 +1,3 @@
 {
-  "exceptions": [
-    {
-      "package": "colors",
-      "version": "1.4.1",
-      "reason": "Safe I see",
-      "date": "2026-07-10",
-      "accepted_by": "LENONO"
-    }
-  ]
+  "exceptions": []
 }

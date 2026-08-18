@@ -1,0 +1,978 @@
+{
+  "scan_date": "2026-08-12T11:43:46.046727+00:00",
+  "manifest_path": "demo/requirements.txt",
+  "scanned_by": "LENONO",
+  "summary": {
+    "total": 10,
+    "critical": 1,
+    "high": 4,
+    "medium": 1,
+    "low": 1,
+    "safe": 0,
+    "unverified": 3
+  },
+  "dependencies": [
+    {
+      "package": "pyyaml",
+      "version": "5.3.1",
+      "ecosystem": "pypi",
+      "is_direct": true,
+      "lookup_status": "ok",
+      "cvss": {
+        "score": 9.8,
+        "cve_id": "CVE-2020-14343",
+        "source": "github_advisory",
+        "fixed_version": "5.4",
+        "severity_label": "CRITICAL",
+        "summary": "Improper Input Validation in PyYAML",
+        "cwes": [
+          "CWE-20"
+        ]
+      },
+      "severity": "Critical",
+      "recommendation": "Upgrade pyyaml to version 5.4 or later to remediate CVE-2020-14343.",
+      "exploit_intel": {
+        "status": "ok",
+        "epss_score": 0.05984,
+        "epss_percentile": 0.92618,
+        "in_kev": false,
+        "kev_date_added": null,
+        "source": "epss_kev_live",
+        "summary": null
+      },
+      "scorecard": {
+        "status": "ok",
+        "score": 5,
+        "checks": [
+          {
+            "name": "Maintained",
+            "score": 1
+          },
+          {
+            "name": "Packaging",
+            "score": -1
+          },
+          {
+            "name": "Token-Permissions",
+            "score": 0
+          },
+          {
+            "name": "Dangerous-Workflow",
+            "score": 10
+          },
+          {
+            "name": "Code-Review",
+            "score": 2
+          }
+        ],
+        "repo": "yaml/pyyaml",
+        "source": "scorecard_api",
+        "summary": null
+      },
+      "static_scan": {
+        "status": "not_run",
+        "flagged": false,
+        "flag_reason": null,
+        "indicators": [],
+        "files_scanned": 0,
+        "ml_risk_score": null,
+        "ml_explanation": null
+      },
+      "behavioral": {
+        "release_frequency_deviation": 1.5861320595986086,
+        "maintainer_count": 1,
+        "version_jump_irregularity": 2.701334452022863,
+        "download_age_ratio": 53310.938366392475,
+        "status": "ok"
+      },
+      "anomaly_flagged": false,
+      "anomaly_explanation": {
+        "attributions": [
+          {
+            "feature": "release_frequency_deviation",
+            "value": 1.5861320595986086,
+            "shap_value": 0.03157905751906531
+          },
+          {
+            "feature": "maintainer_count",
+            "value": 1.0,
+            "shap_value": 0.0
+          },
+          {
+            "feature": "version_jump_irregularity",
+            "value": 2.701334452022863,
+            "shap_value": -0.020481840110043614
+          },
+          {
+            "feature": "download_age_ratio",
+            "value": 53310.938366392475,
+            "shap_value": -0.014359189272641681
+          }
+        ],
+        "base_value": -0.5441257840186833,
+        "model_output": -0.5473877558823033,
+        "top_feature": "release_frequency_deviation",
+        "explanation_text": "Not flagged. Primary contributing factors were a steady release cadence and an irregular version jump between releases."
+      }
+    },
+    {
+      "package": "pillow",
+      "version": "8.4.0",
+      "ecosystem": "pypi",
+      "is_direct": true,
+      "lookup_status": "ok",
+      "cvss": {
+        "score": 8.2,
+        "cve_id": "CVE-2026-59197",
+        "source": "github_advisory",
+        "fixed_version": "12.3.0",
+        "severity_label": "HIGH",
+        "summary": "Pillow: Heap out-of-bounds write in `ImageFilter.RankFilter` via integer overflow in `ImagingExpand`",
+        "cwes": [
+          "CWE-190"
+        ]
+      },
+      "severity": "High",
+      "recommendation": "Upgrade pillow to version 12.3.0 or later to remediate CVE-2026-59197.",
+      "exploit_intel": {
+        "status": "ok",
+        "epss_score": 0.00436,
+        "epss_percentile": 0.36024,
+        "in_kev": false,
+        "kev_date_added": null,
+        "source": "epss_kev_live",
+        "summary": null
+      },
+      "scorecard": {
+        "status": "ok",
+        "score": 8.3,
+        "checks": [
+          {
+            "name": "Maintained",
+            "score": 10
+          },
+          {
+            "name": "Dangerous-Workflow",
+            "score": 10
+          },
+          {
+            "name": "Security-Policy",
+            "score": 10
+          },
+          {
+            "name": "Code-Review",
+            "score": 8
+          },
+          {
+            "name": "Token-Permissions",
+            "score": 10
+          }
+        ],
+        "repo": "python-pillow/Pillow",
+        "source": "scorecard_api",
+        "summary": null
+      },
+      "static_scan": {
+        "status": "not_run",
+        "flagged": false,
+        "flag_reason": null,
+        "indicators": [],
+        "files_scanned": 0,
+        "ml_risk_score": null,
+        "ml_explanation": null
+      },
+      "behavioral": {
+        "release_frequency_deviation": 0.0,
+        "maintainer_count": 0,
+        "version_jump_irregularity": 0.0,
+        "download_age_ratio": 0.0,
+        "status": "lookup_failed"
+      },
+      "anomaly_flagged": false,
+      "anomaly_explanation": {
+        "attributions": [
+          {
+            "feature": "release_frequency_deviation",
+            "value": 0.0,
+            "shap_value": 0.0
+          },
+          {
+            "feature": "maintainer_count",
+            "value": 0.0,
+            "shap_value": 0.0
+          },
+          {
+            "feature": "version_jump_irregularity",
+            "value": 0.0,
+            "shap_value": 0.0
+          },
+          {
+            "feature": "download_age_ratio",
+            "value": 0.0,
+            "shap_value": 0.0
+          }
+        ],
+        "base_value": -0.5441257840186833,
+        "model_output": -0.5441257840186833,
+        "top_feature": "release_frequency_deviation",
+        "explanation_text": "Not flagged. Primary contributing factors were a steady release cadence and a healthy maintainer pool of 0 maintainers."
+      }
+    },
+    {
+      "package": "werkzeug",
+      "version": "2.2.2",
+      "ecosystem": "pypi",
+      "is_direct": true,
+      "lookup_status": "ok",
+      "cvss": {
+        "score": 7.5,
+        "cve_id": "CVE-2024-49767",
+        "source": "github_advisory",
+        "fixed_version": "3.0.6",
+        "severity_label": "MODERATE",
+        "summary": "Werkzeug possible resource exhaustion when parsing file data in forms",
+        "cwes": [
+          "CWE-400"
+        ]
+      },
+      "severity": "High",
+      "recommendation": "Upgrade werkzeug to version 3.0.6 or later to remediate CVE-2024-49767.",
+      "exploit_intel": {
+        "status": "ok",
+        "epss_score": 0.01095,
+        "epss_percentile": 0.62475,
+        "in_kev": false,
+        "kev_date_added": null,
+        "source": "epss_kev_live",
+        "summary": null
+      },
+      "scorecard": {
+        "status": "ok",
+        "score": 6,
+        "checks": [
+          {
+            "name": "Code-Review",
+            "score": 0
+          },
+          {
+            "name": "Maintained",
+            "score": 10
+          },
+          {
+            "name": "Dangerous-Workflow",
+            "score": 10
+          },
+          {
+            "name": "Token-Permissions",
+            "score": 10
+          },
+          {
+            "name": "Binary-Artifacts",
+            "score": 10
+          }
+        ],
+        "repo": "pallets/werkzeug",
+        "source": "scorecard_api",
+        "summary": null
+      },
+      "static_scan": {
+        "status": "not_run",
+        "flagged": false,
+        "flag_reason": null,
+        "indicators": [],
+        "files_scanned": 0,
+        "ml_risk_score": null,
+        "ml_explanation": null
+      },
+      "behavioral": {
+        "release_frequency_deviation": 0.0,
+        "maintainer_count": 0,
+        "version_jump_irregularity": 0.0,
+        "download_age_ratio": 0.0,
+        "status": "lookup_failed"
+      },
+      "anomaly_flagged": false,
+      "anomaly_explanation": {
+        "attributions": [
+          {
+            "feature": "release_frequency_deviation",
+            "value": 0.0,
+            "shap_value": 0.0
+          },
+          {
+            "feature": "maintainer_count",
+            "value": 0.0,
+            "shap_value": 0.0
+          },
+          {
+            "feature": "version_jump_irregularity",
+            "value": 0.0,
+            "shap_value": 0.0
+          },
+          {
+            "feature": "download_age_ratio",
+            "value": 0.0,
+            "shap_value": 0.0
+          }
+        ],
+        "base_value": -0.5441257840186833,
+        "model_output": -0.5441257840186833,
+        "top_feature": "release_frequency_deviation",
+        "explanation_text": "Not flagged. Primary contributing factors were a steady release cadence and a healthy maintainer pool of 0 maintainers."
+      }
+    },
+    {
+      "package": "urllib3",
+      "version": "1.26.16",
+      "ecosystem": "pypi",
+      "is_direct": true,
+      "lookup_status": "ok",
+      "cvss": {
+        "score": 7.5,
+        "cve_id": "CVE-2026-21441",
+        "source": "github_advisory",
+        "fixed_version": "2.6.3",
+        "severity_label": "HIGH",
+        "summary": "Decompression-bomb safeguards bypassed when following HTTP redirects (streaming API)",
+        "cwes": [
+          "CWE-409"
+        ]
+      },
+      "severity": "High",
+      "recommendation": "Upgrade urllib3 to version 2.6.3 or later to remediate CVE-2026-21441.",
+      "exploit_intel": {
+        "status": "ok",
+        "epss_score": 0.02714,
+        "epss_percentile": 0.8462,
+        "in_kev": false,
+        "kev_date_added": null,
+        "source": "epss_kev_live",
+        "summary": null
+      },
+      "scorecard": {
+        "status": "not_available",
+        "score": null,
+        "checks": null,
+        "repo": null,
+        "source": null,
+        "summary": null
+      },
+      "static_scan": {
+        "status": "not_run",
+        "flagged": false,
+        "flag_reason": null,
+        "indicators": [],
+        "files_scanned": 0,
+        "ml_risk_score": null,
+        "ml_explanation": null
+      },
+      "behavioral": {
+        "release_frequency_deviation": 1.4085489785011156,
+        "maintainer_count": 4,
+        "version_jump_irregularity": 2.440177174778889,
+        "download_age_ratio": 73553.5107575314,
+        "status": "ok"
+      },
+      "anomaly_flagged": false,
+      "anomaly_explanation": {
+        "attributions": [
+          {
+            "feature": "release_frequency_deviation",
+            "value": 1.4085489785011156,
+            "shap_value": 0.04147455798762331
+          },
+          {
+            "feature": "maintainer_count",
+            "value": 4.0,
+            "shap_value": 0.045124120788509664
+          },
+          {
+            "feature": "version_jump_irregularity",
+            "value": 2.440177174778889,
+            "shap_value": -0.013091097448505062
+          },
+          {
+            "feature": "download_age_ratio",
+            "value": 73553.5107575314,
+            "shap_value": -0.019962085431676053
+          }
+        ],
+        "base_value": -0.5441257840186833,
+        "model_output": -0.4905802881227314,
+        "top_feature": "maintainer_count",
+        "explanation_text": "Not flagged. Primary contributing factors were a healthy maintainer pool of 4 maintainers and a steady release cadence."
+      }
+    },
+    {
+      "package": "jinja2",
+      "version": "3.1.2",
+      "ecosystem": "pypi",
+      "is_direct": true,
+      "lookup_status": "ok",
+      "cvss": {
+        "score": 8.8,
+        "cve_id": "CVE-2024-56201",
+        "source": "github_advisory",
+        "fixed_version": "3.1.5",
+        "severity_label": "MODERATE",
+        "summary": "Jinja has a sandbox breakout through malicious filenames",
+        "cwes": [
+          "CWE-150"
+        ]
+      },
+      "severity": "High",
+      "recommendation": "Upgrade jinja2 to version 3.1.5 or later to remediate CVE-2024-56201.",
+      "exploit_intel": {
+        "status": "ok",
+        "epss_score": 0.00307,
+        "epss_percentile": 0.23056,
+        "in_kev": false,
+        "kev_date_added": null,
+        "source": "epss_kev_live",
+        "summary": null
+      },
+      "scorecard": {
+        "status": "ok",
+        "score": 5.9,
+        "checks": [
+          {
+            "name": "Code-Review",
+            "score": 0
+          },
+          {
+            "name": "Dangerous-Workflow",
+            "score": 10
+          },
+          {
+            "name": "Maintained",
+            "score": 5
+          },
+          {
+            "name": "Binary-Artifacts",
+            "score": 10
+          },
+          {
+            "name": "Token-Permissions",
+            "score": 0
+          }
+        ],
+        "repo": "pallets/jinja",
+        "source": "scorecard_api",
+        "summary": null
+      },
+      "static_scan": {
+        "status": "not_run",
+        "flagged": false,
+        "flag_reason": null,
+        "indicators": [],
+        "files_scanned": 0,
+        "ml_risk_score": null,
+        "ml_explanation": null
+      },
+      "behavioral": {
+        "release_frequency_deviation": 1.3634486072698646,
+        "maintainer_count": 1,
+        "version_jump_irregularity": 3.816726029936489,
+        "download_age_ratio": 27721.115028291715,
+        "status": "ok"
+      },
+      "anomaly_flagged": true,
+      "anomaly_explanation": {
+        "attributions": [
+          {
+            "feature": "release_frequency_deviation",
+            "value": 1.3634486072698646,
+            "shap_value": 0.03529279747009257
+          },
+          {
+            "feature": "maintainer_count",
+            "value": 1.0,
+            "shap_value": 0.0
+          },
+          {
+            "feature": "version_jump_irregularity",
+            "value": 3.816726029936489,
+            "shap_value": -0.10646116899736145
+          },
+          {
+            "feature": "download_age_ratio",
+            "value": 27721.115028291715,
+            "shap_value": -0.0011670597403532212
+          }
+        ],
+        "base_value": -0.5441257840186833,
+        "model_output": -0.6164612152863054,
+        "top_feature": "version_jump_irregularity",
+        "explanation_text": "Flagged due to an irregular version jump between releases and a steady release cadence."
+      }
+    },
+    {
+      "package": "certifi",
+      "version": "2024.2.2",
+      "ecosystem": "pypi",
+      "is_direct": true,
+      "lookup_status": "ok",
+      "cvss": {
+        "score": null,
+        "cve_id": "CVE-2024-39689",
+        "source": "github_advisory",
+        "fixed_version": "2024.7.4",
+        "severity_label": "LOW",
+        "summary": "Certifi removes GLOBALTRUST root certificate",
+        "cwes": [
+          "CWE-345"
+        ]
+      },
+      "severity": "Low",
+      "recommendation": "No action required.",
+      "exploit_intel": {
+        "status": "ok",
+        "epss_score": 0.01049,
+        "epss_percentile": 0.61092,
+        "in_kev": false,
+        "kev_date_added": null,
+        "source": "epss_kev_live",
+        "summary": null
+      },
+      "scorecard": {
+        "status": "ok",
+        "score": 6.4,
+        "checks": [
+          {
+            "name": "Dangerous-Workflow",
+            "score": 10
+          },
+          {
+            "name": "Code-Review",
+            "score": 3
+          },
+          {
+            "name": "Binary-Artifacts",
+            "score": 10
+          },
+          {
+            "name": "Maintained",
+            "score": 10
+          },
+          {
+            "name": "Security-Policy",
+            "score": 10
+          }
+        ],
+        "repo": "certifi/python-certifi",
+        "source": "scorecard_api",
+        "summary": null
+      },
+      "static_scan": {
+        "status": "not_run",
+        "flagged": false,
+        "flag_reason": null,
+        "indicators": [],
+        "files_scanned": 0,
+        "ml_risk_score": null,
+        "ml_explanation": null
+      },
+      "behavioral": {
+        "release_frequency_deviation": 0.0,
+        "maintainer_count": 0,
+        "version_jump_irregularity": 0.0,
+        "download_age_ratio": 0.0,
+        "status": "lookup_failed"
+      },
+      "anomaly_flagged": false,
+      "anomaly_explanation": {
+        "attributions": [
+          {
+            "feature": "release_frequency_deviation",
+            "value": 0.0,
+            "shap_value": 0.0
+          },
+          {
+            "feature": "maintainer_count",
+            "value": 0.0,
+            "shap_value": 0.0
+          },
+          {
+            "feature": "version_jump_irregularity",
+            "value": 0.0,
+            "shap_value": 0.0
+          },
+          {
+            "feature": "download_age_ratio",
+            "value": 0.0,
+            "shap_value": 0.0
+          }
+        ],
+        "base_value": -0.5441257840186833,
+        "model_output": -0.5441257840186833,
+        "top_feature": "release_frequency_deviation",
+        "explanation_text": "Not flagged. Primary contributing factors were a steady release cadence and a healthy maintainer pool of 0 maintainers."
+      }
+    },
+    {
+      "package": "idna",
+      "version": "3.6",
+      "ecosystem": "pypi",
+      "is_direct": true,
+      "lookup_status": "ok",
+      "cvss": {
+        "score": 6.2,
+        "cve_id": "CVE-2024-3651",
+        "source": "github_advisory",
+        "fixed_version": "3.7",
+        "severity_label": "MODERATE",
+        "summary": "Internationalized Domain Names in Applications (IDNA) vulnerable to denial of service from specially crafted inputs to idna.encode",
+        "cwes": [
+          "CWE-400",
+          "CWE-1333"
+        ]
+      },
+      "severity": "Medium",
+      "recommendation": "Upgrade idna to version 3.7 or later to remediate CVE-2024-3651.",
+      "exploit_intel": {
+        "status": "ok",
+        "epss_score": 0.01386,
+        "epss_percentile": 0.69674,
+        "in_kev": false,
+        "kev_date_added": null,
+        "source": "epss_kev_live",
+        "summary": null
+      },
+      "scorecard": {
+        "status": "ok",
+        "score": 8.8,
+        "checks": [
+          {
+            "name": "Code-Review",
+            "score": 1
+          },
+          {
+            "name": "Security-Policy",
+            "score": 10
+          },
+          {
+            "name": "Dangerous-Workflow",
+            "score": 10
+          },
+          {
+            "name": "Token-Permissions",
+            "score": 10
+          },
+          {
+            "name": "Dependency-Update-Tool",
+            "score": 10
+          }
+        ],
+        "repo": "kjd/idna",
+        "source": "scorecard_api",
+        "summary": null
+      },
+      "static_scan": {
+        "status": "not_run",
+        "flagged": false,
+        "flag_reason": null,
+        "indicators": [],
+        "files_scanned": 0,
+        "ml_risk_score": null,
+        "ml_explanation": null
+      },
+      "behavioral": {
+        "release_frequency_deviation": 0.0,
+        "maintainer_count": 0,
+        "version_jump_irregularity": 0.0,
+        "download_age_ratio": 0.0,
+        "status": "lookup_failed"
+      },
+      "anomaly_flagged": false,
+      "anomaly_explanation": {
+        "attributions": [
+          {
+            "feature": "release_frequency_deviation",
+            "value": 0.0,
+            "shap_value": 0.0
+          },
+          {
+            "feature": "maintainer_count",
+            "value": 0.0,
+            "shap_value": 0.0
+          },
+          {
+            "feature": "version_jump_irregularity",
+            "value": 0.0,
+            "shap_value": 0.0
+          },
+          {
+            "feature": "download_age_ratio",
+            "value": 0.0,
+            "shap_value": 0.0
+          }
+        ],
+        "base_value": -0.5441257840186833,
+        "model_output": -0.5441257840186833,
+        "top_feature": "release_frequency_deviation",
+        "explanation_text": "Not flagged. Primary contributing factors were a steady release cadence and a healthy maintainer pool of 0 maintainers."
+      }
+    },
+    {
+      "package": "charset-normalizer",
+      "version": "3.3.2",
+      "ecosystem": "pypi",
+      "is_direct": true,
+      "lookup_status": "no_cve",
+      "cvss": {
+        "score": null,
+        "cve_id": null,
+        "source": "nvd",
+        "fixed_version": null,
+        "severity_label": null,
+        "summary": null,
+        "cwes": []
+      },
+      "severity": "Unverified",
+      "recommendation": "No CVE ID exists for charset-normalizer at this version - it has not been catalogued as vulnerable anywhere. This does not confirm it is safe - run a static code scan to check its real published source before proceeding. Its publishing pattern also looks unusual (behavioral anomaly detected) - prioritize scanning this one over other Unverified dependencies.",
+      "exploit_intel": {
+        "status": "not_applicable",
+        "epss_score": null,
+        "epss_percentile": null,
+        "in_kev": false,
+        "kev_date_added": null,
+        "source": null,
+        "summary": null
+      },
+      "scorecard": {
+        "status": "not_available",
+        "score": null,
+        "checks": null,
+        "repo": null,
+        "source": null,
+        "summary": null
+      },
+      "static_scan": {
+        "status": "not_run",
+        "flagged": false,
+        "flag_reason": null,
+        "indicators": [],
+        "files_scanned": 0,
+        "ml_risk_score": null,
+        "ml_explanation": null
+      },
+      "behavioral": {
+        "release_frequency_deviation": 1.8077522504032597,
+        "maintainer_count": 1,
+        "version_jump_irregularity": 3.295637069903004,
+        "download_age_ratio": 159495.96401491115,
+        "status": "ok"
+      },
+      "anomaly_flagged": true,
+      "anomaly_explanation": {
+        "attributions": [
+          {
+            "feature": "release_frequency_deviation",
+            "value": 1.8077522504032597,
+            "shap_value": 0.01828995070541585
+          },
+          {
+            "feature": "maintainer_count",
+            "value": 1.0,
+            "shap_value": 0.0
+          },
+          {
+            "feature": "version_jump_irregularity",
+            "value": 3.295637069903004,
+            "shap_value": -0.06831029138869411
+          },
+          {
+            "feature": "download_age_ratio",
+            "value": 159495.96401491115,
+            "shap_value": -0.04032271791634817
+          }
+        ],
+        "base_value": -0.5441257840186833,
+        "model_output": -0.6344688426183097,
+        "top_feature": "version_jump_irregularity",
+        "explanation_text": "Flagged due to an irregular version jump between releases and an unusual download to age ratio."
+      }
+    },
+    {
+      "package": "dlib",
+      "version": "20.0.1",
+      "ecosystem": "pypi",
+      "is_direct": true,
+      "lookup_status": "no_cve",
+      "cvss": {
+        "score": null,
+        "cve_id": null,
+        "source": "nvd",
+        "fixed_version": null,
+        "severity_label": null,
+        "summary": null,
+        "cwes": []
+      },
+      "severity": "Unverified",
+      "recommendation": "No CVE ID exists for dlib at this version - it has not been catalogued as vulnerable anywhere. This does not confirm it is safe - run a static code scan to check its real published source before proceeding.",
+      "exploit_intel": {
+        "status": "not_applicable",
+        "epss_score": null,
+        "epss_percentile": null,
+        "in_kev": false,
+        "kev_date_added": null,
+        "source": null,
+        "summary": null
+      },
+      "scorecard": {
+        "status": "ok",
+        "score": 4.3,
+        "checks": [
+          {
+            "name": "Maintained",
+            "score": 10
+          },
+          {
+            "name": "Code-Review",
+            "score": 6
+          },
+          {
+            "name": "Packaging",
+            "score": -1
+          },
+          {
+            "name": "Dangerous-Workflow",
+            "score": 10
+          },
+          {
+            "name": "CII-Best-Practices",
+            "score": 0
+          }
+        ],
+        "repo": "davisking/dlib",
+        "source": "scorecard_api",
+        "summary": null
+      },
+      "static_scan": {
+        "status": "not_run",
+        "flagged": false,
+        "flag_reason": null,
+        "indicators": [],
+        "files_scanned": 0,
+        "ml_risk_score": null,
+        "ml_explanation": null
+      },
+      "behavioral": {
+        "release_frequency_deviation": 0.0,
+        "maintainer_count": 0,
+        "version_jump_irregularity": 0.0,
+        "download_age_ratio": 0.0,
+        "status": "lookup_failed"
+      },
+      "anomaly_flagged": false,
+      "anomaly_explanation": {
+        "attributions": [
+          {
+            "feature": "release_frequency_deviation",
+            "value": 0.0,
+            "shap_value": 0.0
+          },
+          {
+            "feature": "maintainer_count",
+            "value": 0.0,
+            "shap_value": 0.0
+          },
+          {
+            "feature": "version_jump_irregularity",
+            "value": 0.0,
+            "shap_value": 0.0
+          },
+          {
+            "feature": "download_age_ratio",
+            "value": 0.0,
+            "shap_value": 0.0
+          }
+        ],
+        "base_value": -0.5441257840186833,
+        "model_output": -0.5441257840186833,
+        "top_feature": "release_frequency_deviation",
+        "explanation_text": "Not flagged. Primary contributing factors were a steady release cadence and a healthy maintainer pool of 0 maintainers."
+      }
+    },
+    {
+      "package": "iniconfig",
+      "version": "2.0.0",
+      "ecosystem": "pypi",
+      "is_direct": true,
+      "lookup_status": "no_cve",
+      "cvss": {
+        "score": null,
+        "cve_id": null,
+        "source": "nvd",
+        "fixed_version": null,
+        "severity_label": null,
+        "summary": null,
+        "cwes": []
+      },
+      "severity": "Unverified",
+      "recommendation": "No CVE ID exists for iniconfig at this version - it has not been catalogued as vulnerable anywhere. This does not confirm it is safe - run a static code scan to check its real published source before proceeding.",
+      "exploit_intel": {
+        "status": "not_applicable",
+        "epss_score": null,
+        "epss_percentile": null,
+        "in_kev": false,
+        "kev_date_added": null,
+        "source": null,
+        "summary": null
+      },
+      "scorecard": {
+        "status": "not_available",
+        "score": null,
+        "checks": null,
+        "repo": null,
+        "source": null,
+        "summary": null
+      },
+      "static_scan": {
+        "status": "not_run",
+        "flagged": false,
+        "flag_reason": null,
+        "indicators": [],
+        "files_scanned": 0,
+        "ml_risk_score": null,
+        "ml_explanation": null
+      },
+      "behavioral": {
+        "release_frequency_deviation": 0.0,
+        "maintainer_count": 0,
+        "version_jump_irregularity": 0.0,
+        "download_age_ratio": 0.0,
+        "status": "lookup_failed"
+      },
+      "anomaly_flagged": false,
+      "anomaly_explanation": {
+        "attributions": [
+          {
+            "feature": "release_frequency_deviation",
+            "value": 0.0,
+            "shap_value": 0.0
+          },
+          {
+            "feature": "maintainer_count",
+            "value": 0.0,
+            "shap_value": 0.0
+          },
+          {
+            "feature": "version_jump_irregularity",
+            "value": 0.0,
+            "shap_value": 0.0
+          },
+          {
+            "feature": "download_age_ratio",
+            "value": 0.0,
+            "shap_value": 0.0
+          }
+        ],
+        "base_value": -0.5441257840186833,
+        "model_output": -0.5441257840186833,
+        "top_feature": "release_frequency_deviation",
+        "explanation_text": "Not flagged. Primary contributing factors were a steady release cadence and a healthy maintainer pool of 0 maintainers."
+      }
+    }
+  ]
+}

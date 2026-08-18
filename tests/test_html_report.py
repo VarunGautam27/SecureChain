@@ -32,23 +32,10 @@ def _sample_report(n=3, scanned_by=None):
         dependencies.append({
             "package": f"pkg-{i}",
             "version": "1.0.0",
+            "lookup_status": "ok",
             "cvss": {"score": None, "cve_id": None, "severity_label": None, "fixed_version": None},
-            "behavioral": {
-                "release_frequency_deviation": 0.5,
-                "maintainer_count": 2,
-                "version_jump_irregularity": 0.5,
-                "download_age_ratio": 10.0,
-            },
-            "risk_score": 0.1 * i,
-            "anomaly_flagged": False,
-            "base_severity": sev,
             "severity": sev,
-            "escalated": False,
             "recommendation": "No action required.",
-            "shap": {
-                "classifier": {"explanation_text": "Not flagged."},
-                "anomaly": {"explanation_text": "Not flagged."},
-            },
         })
     report = {
         "scan_date": "2026-07-09T00:00:00+00:00",
@@ -100,7 +87,7 @@ def test_recommendation_tab_is_visible_by_default():
     assert re.search(r'data-tab="recommendation">\s*<p>No action required\.</p>', html_output)
     assert re.search(r'data-tab="cvss"\s+hidden', html_output)
     assert re.search(r'data-tab="severity"\s+hidden', html_output)
-    assert re.search(r'data-tab="behavioral"\s+hidden', html_output)
+    assert re.search(r'data-tab="scorecard"\s+hidden', html_output)
     assert 'data-tab="explanation"' not in html_output
     assert 'data-tab="triage"' not in html_output
 

@@ -1,0 +1,8 @@
+{
+  "name": "securechain-js-ast",
+  "private": true,
+  "description": "Minimal Node helper used only by securechain/static_scan.py to parse JavaScript source into an ESTree AST via acorn, batched into a single process call for performance.",
+  "dependencies": {
+    "acorn": "^8.11.0"
+  }
+}

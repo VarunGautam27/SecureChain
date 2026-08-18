@@ -25,7 +25,8 @@ from flask import Flask, jsonify, request, send_from_directory
 
 from securechain.gate import evaluate_gate
 from securechain.manifest import find_lockfile
-from securechain.pipeline import run_scan
+from securechain.pipeline import run_scan, scan_single_dependency_static
+from securechain.report_json import detect_scanner_identity
 from securechain.riskignore import accept_risk, load_riskignore
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
@@ -37,6 +38,7 @@ app = Flask(__name__, static_folder=str(STATIC_DIR), static_url_path="")
 _SKIP_DIR_NAMES = {
     ".git", "node_modules", "__pycache__", ".venv", "venv",
     "dist", "build", ".pytest_cache", "result", ".idea", ".vscode",
+    "js_ast",  # this project's own internal Node/acorn helper, not a scannable project manifest
 }
 _MAX_MANIFESTS = 200
 
@@ -117,6 +119,18 @@ def _parse_github_remote(url: str) -> Optional[tuple[str, str]]:
 @app.route("/")
 def index():
     return send_from_directory(STATIC_DIR, "index.html")
+
+
+@app.route("/api/whoami", methods=["GET"])
+def whoami():
+    """The real, session-based identity of whoever is running this GUI right
+    now - the actual logged-in OS username (or the CI actor, if running in
+    CI), the same detection this project already uses to record who ran a
+    scan. Used to auto-fill and lock the "accepted by" field on risk
+    acceptances, rather than leaving it an editable free-text box anyone
+    could type any name into to falsely attribute a decision to someone else.
+    """
+    return jsonify({"identity": detect_scanner_identity()})
 
 
 @app.route("/api/browse", methods=["GET"])
@@ -206,6 +220,39 @@ def scan():
         "accepted_keys": sorted(accepted_keys),
         "used_offline_cache": offline,
     })
+
+
+@app.route("/api/static-scan", methods=["POST"])
+def static_scan():
+    """The manual "Scan static code" button for a dependency with no
+    catalogued CVE - always live, never offline, since clicking it means the
+    user explicitly wants a real scan of the package's real published
+    source right now.
+    """
+    body = request.get_json(force=True) or {}
+    package = body.get("package", "")
+    version = body.get("version", "")
+    ecosystem = body.get("ecosystem", "npm")
+    folder = body.get("folder", "")
+    manifest_relpath = body.get("manifest", "")
+
+    if not package or not version:
+        return jsonify({"error": "package and version are required"}), 400
+    if not folder:
+        return jsonify({"error": "folder is required so the result can be cached for this project"}), 400
+
+    # The cache must sit next to the manifest, the same directory run_scan()
+    # itself uses - not necessarily the top-level folder the user selected,
+    # since the manifest can sit in a subfolder (demo/package.json). Mirrors
+    # how /api/scan resolves "manifest = Path(folder) / manifest_relpath".
+    manifest_dir = (Path(folder) / manifest_relpath).parent if manifest_relpath else Path(folder)
+
+    try:
+        result = scan_single_dependency_static(package, version, ecosystem, manifest_dir)
+    except Exception as exc:
+        return jsonify({"error": f"Static scan failed. {exc}"}), 500
+
+    return jsonify(result)
 
 
 @app.route("/api/accept", methods=["POST"])

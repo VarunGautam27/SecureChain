@@ -1,0 +1,455 @@
+<title>SecureChain Dependency Risk Report</title>
+<style>
+* { box-sizing: border-box; }
+:root {
+  color-scheme: light dark;
+  --bg: #0b0d10;
+  --surface: #15181d;
+  --surface-2: #1d2127;
+  --border: #2a2f37;
+  --text: #f2f3f5;
+  --text-secondary: #a7adb8;
+  --shadow: none;
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f7f7f8;
+    --surface: #ffffff;
+    --surface-2: #f0f1f3;
+    --border: #dfe1e6;
+    --text: #14161a;
+    --text-secondary: #5b6069;
+    --shadow: 0 1px 3px rgba(11,11,11,0.08);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0b0d10;
+  --surface: #15181d;
+  --surface-2: #1d2127;
+  --border: #2a2f37;
+  --text: #f2f3f5;
+  --text-secondary: #a7adb8;
+  --shadow: none;
+}
+:root[data-theme="light"] {
+  --bg: #f7f7f8;
+  --surface: #ffffff;
+  --surface-2: #f0f1f3;
+  --border: #dfe1e6;
+  --text: #14161a;
+  --text-secondary: #5b6069;
+  --shadow: 0 1px 3px rgba(11,11,11,0.08);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  margin: 0;
+  padding: 2rem;
+  line-height: 1.5;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+h1 { font-weight: bold; font-size: 1.6rem; margin: 0 0 0.25rem; }
+h2 { font-weight: bold; font-size: 1rem; margin: 0 0 0.6rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em; }
+.meta { color: var(--text-secondary); font-size: 0.85rem; margin: 0.15rem 0; }
+
+.theme-toggle {
+  border: 1px solid var(--border);
+  background-color: var(--surface);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.8rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.stat-row { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 1.75rem; }
+.stat-tile {
+  flex: 1 1 110px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background-color: var(--surface);
+  box-shadow: var(--shadow);
+  padding: 0.7rem 0.9rem;
+}
+.stat-tile .stat-value { font-size: 1.5rem; font-weight: bold; }
+.stat-tile .stat-label { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.03em; }
+
+.severity-scale { margin-bottom: 2rem; }
+.severity-legend { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.severity-badge {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.25rem 0.85rem;
+  font-weight: bold;
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+  border: 1px solid var(--border);
+}
+
+.severity-legend .severity-badge {
+  font-family: inherit;
+  cursor: pointer;
+  appearance: none;
+}
+.severity-legend .severity-badge.legend-all {
+  background-color: var(--surface-2);
+  color: var(--text);
+}
+.severity-legend .severity-badge.active {
+  box-shadow: 0 0 0 2px var(--text);
+}
+
+.accepted-tag {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.2rem 0.7rem;
+  font-size: 0.7rem;
+  font-weight: bold;
+  letter-spacing: 0.03em;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  background-color: var(--surface-2);
+}
+
+.dep-card {
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background-color: var(--surface);
+  box-shadow: var(--shadow);
+  margin-bottom: 1.25rem;
+  overflow: hidden;
+}
+.dep-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.9rem 1.1rem;
+  border-bottom: 1px solid var(--border);
+}
+.dep-name-group { display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap; }
+.dep-name { font-weight: bold; font-size: 1.05rem; }
+.dep-version { font-weight: normal; font-size: 0.85rem; color: var(--text-secondary); }
+.dep-badges { display: flex; align-items: center; gap: 0.5rem; }
+
+.tab-bar { display: flex; flex-wrap: wrap; gap: 0.25rem; padding: 0.6rem 0.7rem 0; }
+.tab-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 0.45rem 0.75rem;
+  background-color: transparent;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+.tab-btn.active { background-color: var(--surface-2); color: var(--text); }
+
+.tab-panel { padding: 1rem 1.1rem 1.2rem; }
+.tab-panel p { margin: 0.3rem 0; }
+.tab-panel .muted { color: var(--text-secondary); font-size: 0.85rem; }
+.tab-subheading {
+  margin: 0.9rem 0 0.4rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.72rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+
+.chart-container { max-width: 560px; margin: 2.5rem 0; }
+footer { margin-top: 2rem; font-size: 0.8rem; color: var(--text-secondary); }
+
+/* ==== severity colors: the only color usage in this document ==== */
+.sev-critical { background-color: #b0261a; color: #ffffff; }
+.sev-high { background-color: #b85c00; color: #ffffff; }
+.sev-medium { background-color: #c99a1e; color: #14161a; }
+.sev-low { background-color: #2c5f9e; color: #ffffff; }
+.sev-unverified { background-color: #6b6b76; color: #ffffff; }
+.sev-safe { background-color: #227a3d; color: #ffffff; }
+</style>
+
+    <div class="page-header">
+      <div>
+        <h1>SecureChain Dependency Risk Report</h1>
+        <p class="meta">Scan date: 2026-08-12T11:43:46.046727+00:00</p>
+        <p class="meta">Manifest: demo/requirements.txt</p>
+        <p class="meta">Scanned by: LENONO</p>
+      </div>
+      <button type="button" class="theme-toggle" onclick="scToggleTheme()">Toggle theme</button>
+    </div>
+<div class="stat-row"><div class="stat-tile"><div class="stat-value">10</div><div class="stat-label">Total</div></div><div class="stat-tile"><div class="stat-value" style="color:#b0261a">1</div><div class="stat-label">Critical</div></div><div class="stat-tile"><div class="stat-value" style="color:#b85c00">4</div><div class="stat-label">High</div></div><div class="stat-tile"><div class="stat-value" style="color:#c99a1e">1</div><div class="stat-label">Medium</div></div><div class="stat-tile"><div class="stat-value" style="color:#2c5f9e">1</div><div class="stat-label">Low</div></div><div class="stat-tile"><div class="stat-value" style="color:#6b6b76">3</div><div class="stat-label">Unverified</div></div><div class="stat-tile"><div class="stat-value" style="color:#227a3d">0</div><div class="stat-label">Safe</div></div></div>
+
+    <div class="severity-scale">
+      <h2>Severity Scale</h2>
+      <div class="severity-legend"><button type="button" class="severity-badge legend-all active" onclick="scFilterBySeverity(this, 'all')">ALL</button><button type="button" class="severity-badge sev-safe" onclick="scFilterBySeverity(this, 'Safe')">SAFE</button><button type="button" class="severity-badge sev-unverified" onclick="scFilterBySeverity(this, 'Unverified')">UNVERIFIED</button><button type="button" class="severity-badge sev-low" onclick="scFilterBySeverity(this, 'Low')">LOW</button><button type="button" class="severity-badge sev-medium" onclick="scFilterBySeverity(this, 'Medium')">MEDIUM</button><button type="button" class="severity-badge sev-high" onclick="scFilterBySeverity(this, 'High')">HIGH</button><button type="button" class="severity-badge sev-critical" onclick="scFilterBySeverity(this, 'Critical')">CRITICAL</button></div>
+    </div>
+
+    <section class="dep-card" data-package="pyyaml" data-severity="Critical">
+      <div class="dep-header">
+        <div class="dep-name-group">
+          <span class="dep-name">pyyaml</span>
+          <span class="dep-version">5.3.1</span>
+          <span class="accepted-tag">PYPI</span>
+          
+        </div>
+        <div class="dep-badges">
+          
+          
+          
+          
+          <span class="severity-badge sev-critical">CRITICAL</span>
+        </div>
+      </div>
+      <div class="tab-bar"><button type="button" class="tab-btn active" onclick="scShowTab(this, 'dep-0', 'recommendation')">Recommendation</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-0', 'cvss')">CVSS</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-0', 'severity')">Severity</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-0', 'behavioral')">Behavioral</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-0', 'scorecard')">Scorecard</button></div>
+      <div class="tab-panel" data-dep="dep-0" data-tab="recommendation"><p>Upgrade pyyaml to version 5.4 or later to remediate CVE-2020-14343.</p></div><div class="tab-panel" data-dep="dep-0" data-tab="cvss" hidden><p>CVSS score 9.8</p><p>Identifier CVE-2020-14343</p><p>Weakness category: CWE-20</p><p>Fixed in version 5.4</p><p class="tab-subheading">Exploit Intelligence (EPSS / CISA KEV)</p><p>EPSS score 0.060 (percentile 93%) - FIRST.org&#x27;s predicted probability of real-world exploitation in the next 30 days.</p><p>Not listed on CISA&#x27;s Known Exploited Vulnerabilities catalog.</p></div><div class="tab-panel" data-dep="dep-0" data-tab="severity" hidden><p>Severity is Critical, based on this version&#x27;s CVSS score. See the CVSS tab for details.</p><p class="tab-subheading">How This Could Be Exploited</p><p>Improper Input Validation in PyYAML</p></div><div class="tab-panel" data-dep="dep-0" data-tab="behavioral" hidden><p>Release frequency deviation 1.59</p><p>Maintainer count 1</p><p>Version jump irregularity 2.70</p><p>Download to age ratio 53310.94</p><p>No anomaly detected - publishing pattern looks typical</p><p>Not flagged. Primary contributing factors were a steady release cadence and an irregular version jump between releases.</p></div><div class="tab-panel" data-dep="dep-0" data-tab="scorecard" hidden><p>Overall score for yaml/pyyaml: 5.0 out of 10, a measure of the project&#x27;s own repository health (code review, maintenance, branch protection), not of this specific pinned version.</p><p>Maintained: 1 out of 10.</p><p>Packaging: not applicable to this project.</p><p>Token-Permissions: 0 out of 10.</p><p>Dangerous-Workflow: 10 out of 10.</p><p>Code-Review: 2 out of 10.</p></div>
+    </section>
+    <section class="dep-card" data-package="pillow" data-severity="High">
+      <div class="dep-header">
+        <div class="dep-name-group">
+          <span class="dep-name">pillow</span>
+          <span class="dep-version">8.4.0</span>
+          <span class="accepted-tag">PYPI</span>
+          
+        </div>
+        <div class="dep-badges">
+          
+          
+          
+          
+          <span class="severity-badge sev-high">HIGH</span>
+        </div>
+      </div>
+      <div class="tab-bar"><button type="button" class="tab-btn active" onclick="scShowTab(this, 'dep-1', 'recommendation')">Recommendation</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-1', 'cvss')">CVSS</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-1', 'severity')">Severity</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-1', 'behavioral')">Behavioral</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-1', 'scorecard')">Scorecard</button></div>
+      <div class="tab-panel" data-dep="dep-1" data-tab="recommendation"><p>Upgrade pillow to version 12.3.0 or later to remediate CVE-2026-59197.</p></div><div class="tab-panel" data-dep="dep-1" data-tab="cvss" hidden><p>CVSS score 8.2</p><p>Identifier CVE-2026-59197</p><p>Weakness category: CWE-190</p><p>Fixed in version 12.3.0</p><p class="tab-subheading">Exploit Intelligence (EPSS / CISA KEV)</p><p>EPSS score 0.004 (percentile 36%) - FIRST.org&#x27;s predicted probability of real-world exploitation in the next 30 days.</p><p>Not listed on CISA&#x27;s Known Exploited Vulnerabilities catalog.</p></div><div class="tab-panel" data-dep="dep-1" data-tab="severity" hidden><p>Severity is High, based on this version&#x27;s CVSS score. See the CVSS tab for details.</p><p class="tab-subheading">How This Could Be Exploited</p><p>Pillow: Heap out-of-bounds write in `ImageFilter.RankFilter` via integer overflow in `ImagingExpand`</p></div><div class="tab-panel" data-dep="dep-1" data-tab="behavioral" hidden><p>Release frequency deviation 0.00</p><p>Maintainer count 0</p><p>Version jump irregularity 0.00</p><p>Download to age ratio 0.00</p><p>No anomaly detected - publishing pattern looks typical</p><p>Not flagged. Primary contributing factors were a steady release cadence and a healthy maintainer pool of 0 maintainers.</p></div><div class="tab-panel" data-dep="dep-1" data-tab="scorecard" hidden><p>Overall score for python-pillow/Pillow: 8.3 out of 10, a measure of the project&#x27;s own repository health (code review, maintenance, branch protection), not of this specific pinned version.</p><p>Maintained: 10 out of 10.</p><p>Dangerous-Workflow: 10 out of 10.</p><p>Security-Policy: 10 out of 10.</p><p>Code-Review: 8 out of 10.</p><p>Token-Permissions: 10 out of 10.</p></div>
+    </section>
+    <section class="dep-card" data-package="werkzeug" data-severity="High">
+      <div class="dep-header">
+        <div class="dep-name-group">
+          <span class="dep-name">werkzeug</span>
+          <span class="dep-version">2.2.2</span>
+          <span class="accepted-tag">PYPI</span>
+          
+        </div>
+        <div class="dep-badges">
+          
+          
+          
+          
+          <span class="severity-badge sev-high">HIGH</span>
+        </div>
+      </div>
+      <div class="tab-bar"><button type="button" class="tab-btn active" onclick="scShowTab(this, 'dep-2', 'recommendation')">Recommendation</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-2', 'cvss')">CVSS</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-2', 'severity')">Severity</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-2', 'behavioral')">Behavioral</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-2', 'scorecard')">Scorecard</button></div>
+      <div class="tab-panel" data-dep="dep-2" data-tab="recommendation"><p>Upgrade werkzeug to version 3.0.6 or later to remediate CVE-2024-49767.</p></div><div class="tab-panel" data-dep="dep-2" data-tab="cvss" hidden><p>CVSS score 7.5</p><p>Identifier CVE-2024-49767</p><p>Weakness category: CWE-400</p><p>Fixed in version 3.0.6</p><p class="tab-subheading">Exploit Intelligence (EPSS / CISA KEV)</p><p>EPSS score 0.011 (percentile 62%) - FIRST.org&#x27;s predicted probability of real-world exploitation in the next 30 days.</p><p>Not listed on CISA&#x27;s Known Exploited Vulnerabilities catalog.</p></div><div class="tab-panel" data-dep="dep-2" data-tab="severity" hidden><p>Severity is High, based on this version&#x27;s CVSS score. See the CVSS tab for details.</p><p class="tab-subheading">How This Could Be Exploited</p><p>Werkzeug possible resource exhaustion when parsing file data in forms</p></div><div class="tab-panel" data-dep="dep-2" data-tab="behavioral" hidden><p>Release frequency deviation 0.00</p><p>Maintainer count 0</p><p>Version jump irregularity 0.00</p><p>Download to age ratio 0.00</p><p>No anomaly detected - publishing pattern looks typical</p><p>Not flagged. Primary contributing factors were a steady release cadence and a healthy maintainer pool of 0 maintainers.</p></div><div class="tab-panel" data-dep="dep-2" data-tab="scorecard" hidden><p>Overall score for pallets/werkzeug: 6.0 out of 10, a measure of the project&#x27;s own repository health (code review, maintenance, branch protection), not of this specific pinned version.</p><p>Code-Review: 0 out of 10.</p><p>Maintained: 10 out of 10.</p><p>Dangerous-Workflow: 10 out of 10.</p><p>Token-Permissions: 10 out of 10.</p><p>Binary-Artifacts: 10 out of 10.</p></div>
+    </section>
+    <section class="dep-card" data-package="urllib3" data-severity="High">
+      <div class="dep-header">
+        <div class="dep-name-group">
+          <span class="dep-name">urllib3</span>
+          <span class="dep-version">1.26.16</span>
+          <span class="accepted-tag">PYPI</span>
+          
+        </div>
+        <div class="dep-badges">
+          
+          
+          
+          
+          <span class="severity-badge sev-high">HIGH</span>
+        </div>
+      </div>
+      <div class="tab-bar"><button type="button" class="tab-btn active" onclick="scShowTab(this, 'dep-3', 'recommendation')">Recommendation</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-3', 'cvss')">CVSS</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-3', 'severity')">Severity</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-3', 'behavioral')">Behavioral</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-3', 'scorecard')">Scorecard</button></div>
+      <div class="tab-panel" data-dep="dep-3" data-tab="recommendation"><p>Upgrade urllib3 to version 2.6.3 or later to remediate CVE-2026-21441.</p></div><div class="tab-panel" data-dep="dep-3" data-tab="cvss" hidden><p>CVSS score 7.5</p><p>Identifier CVE-2026-21441</p><p>Weakness category: CWE-409</p><p>Fixed in version 2.6.3</p><p class="tab-subheading">Exploit Intelligence (EPSS / CISA KEV)</p><p>EPSS score 0.027 (percentile 85%) - FIRST.org&#x27;s predicted probability of real-world exploitation in the next 30 days.</p><p>Not listed on CISA&#x27;s Known Exploited Vulnerabilities catalog.</p></div><div class="tab-panel" data-dep="dep-3" data-tab="severity" hidden><p>Severity is High, based on this version&#x27;s CVSS score. See the CVSS tab for details.</p><p class="tab-subheading">How This Could Be Exploited</p><p>Decompression-bomb safeguards bypassed when following HTTP redirects (streaming API)</p></div><div class="tab-panel" data-dep="dep-3" data-tab="behavioral" hidden><p>Release frequency deviation 1.41</p><p>Maintainer count 4</p><p>Version jump irregularity 2.44</p><p>Download to age ratio 73553.51</p><p>No anomaly detected - publishing pattern looks typical</p><p>Not flagged. Primary contributing factors were a healthy maintainer pool of 4 maintainers and a steady release cadence.</p></div><div class="tab-panel" data-dep="dep-3" data-tab="scorecard" hidden><p>No OpenSSF Scorecard data available for this dependency&#x27;s repository.</p></div>
+    </section>
+    <section class="dep-card" data-package="jinja2" data-severity="High">
+      <div class="dep-header">
+        <div class="dep-name-group">
+          <span class="dep-name">jinja2</span>
+          <span class="dep-version">3.1.2</span>
+          <span class="accepted-tag">PYPI</span>
+          
+        </div>
+        <div class="dep-badges">
+          
+          
+          
+          
+          <span class="severity-badge sev-high">HIGH</span>
+        </div>
+      </div>
+      <div class="tab-bar"><button type="button" class="tab-btn active" onclick="scShowTab(this, 'dep-4', 'recommendation')">Recommendation</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-4', 'cvss')">CVSS</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-4', 'severity')">Severity</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-4', 'behavioral')">Behavioral</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-4', 'scorecard')">Scorecard</button></div>
+      <div class="tab-panel" data-dep="dep-4" data-tab="recommendation"><p>Upgrade jinja2 to version 3.1.5 or later to remediate CVE-2024-56201.</p></div><div class="tab-panel" data-dep="dep-4" data-tab="cvss" hidden><p>CVSS score 8.8</p><p>Identifier CVE-2024-56201</p><p>Weakness category: CWE-150</p><p>Fixed in version 3.1.5</p><p class="tab-subheading">Exploit Intelligence (EPSS / CISA KEV)</p><p>EPSS score 0.003 (percentile 23%) - FIRST.org&#x27;s predicted probability of real-world exploitation in the next 30 days.</p><p>Not listed on CISA&#x27;s Known Exploited Vulnerabilities catalog.</p></div><div class="tab-panel" data-dep="dep-4" data-tab="severity" hidden><p>Severity is High, based on this version&#x27;s CVSS score. See the CVSS tab for details.</p><p class="tab-subheading">How This Could Be Exploited</p><p>Jinja has a sandbox breakout through malicious filenames</p></div><div class="tab-panel" data-dep="dep-4" data-tab="behavioral" hidden><p>Release frequency deviation 1.36</p><p>Maintainer count 1</p><p>Version jump irregularity 3.82</p><p>Download to age ratio 27721.12</p><p>Anomaly detected - publishing pattern looks unusual</p><p>Flagged due to an irregular version jump between releases and a steady release cadence.</p></div><div class="tab-panel" data-dep="dep-4" data-tab="scorecard" hidden><p>Overall score for pallets/jinja: 5.9 out of 10, a measure of the project&#x27;s own repository health (code review, maintenance, branch protection), not of this specific pinned version.</p><p>Code-Review: 0 out of 10.</p><p>Dangerous-Workflow: 10 out of 10.</p><p>Maintained: 5 out of 10.</p><p>Binary-Artifacts: 10 out of 10.</p><p>Token-Permissions: 0 out of 10.</p></div>
+    </section>
+    <section class="dep-card" data-package="idna" data-severity="Medium">
+      <div class="dep-header">
+        <div class="dep-name-group">
+          <span class="dep-name">idna</span>
+          <span class="dep-version">3.6</span>
+          <span class="accepted-tag">PYPI</span>
+          
+        </div>
+        <div class="dep-badges">
+          
+          
+          
+          
+          <span class="severity-badge sev-medium">MEDIUM</span>
+        </div>
+      </div>
+      <div class="tab-bar"><button type="button" class="tab-btn active" onclick="scShowTab(this, 'dep-5', 'recommendation')">Recommendation</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-5', 'cvss')">CVSS</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-5', 'severity')">Severity</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-5', 'behavioral')">Behavioral</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-5', 'scorecard')">Scorecard</button></div>
+      <div class="tab-panel" data-dep="dep-5" data-tab="recommendation"><p>Upgrade idna to version 3.7 or later to remediate CVE-2024-3651.</p></div><div class="tab-panel" data-dep="dep-5" data-tab="cvss" hidden><p>CVSS score 6.2</p><p>Identifier CVE-2024-3651</p><p>Weakness category: CWE-400, CWE-1333</p><p>Fixed in version 3.7</p><p class="tab-subheading">Exploit Intelligence (EPSS / CISA KEV)</p><p>EPSS score 0.014 (percentile 70%) - FIRST.org&#x27;s predicted probability of real-world exploitation in the next 30 days.</p><p>Not listed on CISA&#x27;s Known Exploited Vulnerabilities catalog.</p></div><div class="tab-panel" data-dep="dep-5" data-tab="severity" hidden><p>Severity is Medium, based on this version&#x27;s CVSS score. See the CVSS tab for details.</p><p class="tab-subheading">How This Could Be Exploited</p><p>Internationalized Domain Names in Applications (IDNA) vulnerable to denial of service from specially crafted inputs to idna.encode</p></div><div class="tab-panel" data-dep="dep-5" data-tab="behavioral" hidden><p>Release frequency deviation 0.00</p><p>Maintainer count 0</p><p>Version jump irregularity 0.00</p><p>Download to age ratio 0.00</p><p>No anomaly detected - publishing pattern looks typical</p><p>Not flagged. Primary contributing factors were a steady release cadence and a healthy maintainer pool of 0 maintainers.</p></div><div class="tab-panel" data-dep="dep-5" data-tab="scorecard" hidden><p>Overall score for kjd/idna: 8.8 out of 10, a measure of the project&#x27;s own repository health (code review, maintenance, branch protection), not of this specific pinned version.</p><p>Code-Review: 1 out of 10.</p><p>Security-Policy: 10 out of 10.</p><p>Dangerous-Workflow: 10 out of 10.</p><p>Token-Permissions: 10 out of 10.</p><p>Dependency-Update-Tool: 10 out of 10.</p></div>
+    </section>
+    <section class="dep-card" data-package="certifi" data-severity="Low">
+      <div class="dep-header">
+        <div class="dep-name-group">
+          <span class="dep-name">certifi</span>
+          <span class="dep-version">2024.2.2</span>
+          <span class="accepted-tag">PYPI</span>
+          
+        </div>
+        <div class="dep-badges">
+          
+          
+          
+          
+          <span class="severity-badge sev-low">LOW</span>
+        </div>
+      </div>
+      <div class="tab-bar"><button type="button" class="tab-btn active" onclick="scShowTab(this, 'dep-6', 'recommendation')">Recommendation</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-6', 'cvss')">CVSS</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-6', 'severity')">Severity</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-6', 'behavioral')">Behavioral</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-6', 'scorecard')">Scorecard</button></div>
+      <div class="tab-panel" data-dep="dep-6" data-tab="recommendation"><p>No action required.</p></div><div class="tab-panel" data-dep="dep-6" data-tab="cvss" hidden><p>Qualitative severity LOW, no numeric CVSS score was published.</p><p>Identifier CVE-2024-39689</p><p>Weakness category: CWE-345</p><p>Fixed in version 2024.7.4</p><p class="tab-subheading">Exploit Intelligence (EPSS / CISA KEV)</p><p>EPSS score 0.010 (percentile 61%) - FIRST.org&#x27;s predicted probability of real-world exploitation in the next 30 days.</p><p>Not listed on CISA&#x27;s Known Exploited Vulnerabilities catalog.</p></div><div class="tab-panel" data-dep="dep-6" data-tab="severity" hidden><p>Severity is Low, based on this version&#x27;s CVSS score. See the CVSS tab for details.</p><p class="tab-subheading">How This Could Be Exploited</p><p>Certifi removes GLOBALTRUST root certificate</p></div><div class="tab-panel" data-dep="dep-6" data-tab="behavioral" hidden><p>Release frequency deviation 0.00</p><p>Maintainer count 0</p><p>Version jump irregularity 0.00</p><p>Download to age ratio 0.00</p><p>No anomaly detected - publishing pattern looks typical</p><p>Not flagged. Primary contributing factors were a steady release cadence and a healthy maintainer pool of 0 maintainers.</p></div><div class="tab-panel" data-dep="dep-6" data-tab="scorecard" hidden><p>Overall score for certifi/python-certifi: 6.4 out of 10, a measure of the project&#x27;s own repository health (code review, maintenance, branch protection), not of this specific pinned version.</p><p>Dangerous-Workflow: 10 out of 10.</p><p>Code-Review: 3 out of 10.</p><p>Binary-Artifacts: 10 out of 10.</p><p>Maintained: 10 out of 10.</p><p>Security-Policy: 10 out of 10.</p></div>
+    </section>
+    <section class="dep-card" data-package="charset-normalizer" data-severity="Unverified">
+      <div class="dep-header">
+        <div class="dep-name-group">
+          <span class="dep-name">charset-normalizer</span>
+          <span class="dep-version">3.3.2</span>
+          <span class="accepted-tag">PYPI</span>
+          
+        </div>
+        <div class="dep-badges">
+          
+          
+          
+          <span class="accepted-tag" title="Publishing pattern looks unusual - see the Behavioral tab">PRIORITIZE SCAN</span>
+          <span class="severity-badge sev-unverified">UNVERIFIED</span>
+        </div>
+      </div>
+      <div class="tab-bar"><button type="button" class="tab-btn active" onclick="scShowTab(this, 'dep-7', 'recommendation')">Recommendation</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-7', 'cvss')">CVSS</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-7', 'severity')">Severity</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-7', 'behavioral')">Behavioral</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-7', 'scorecard')">Scorecard</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-7', 'static_scan')">Static Analysis</button></div>
+      <div class="tab-panel" data-dep="dep-7" data-tab="recommendation"><p>No CVE ID exists for charset-normalizer at this version - it has not been catalogued as vulnerable anywhere. This does not confirm it is safe - run a static code scan to check its real published source before proceeding. Its publishing pattern also looks unusual (behavioral anomaly detected) - prioritize scanning this one over other Unverified dependencies.</p></div><div class="tab-panel" data-dep="dep-7" data-tab="cvss" hidden><p>No CVSS score or CVE record was found for this version.</p></div><div class="tab-panel" data-dep="dep-7" data-tab="severity" hidden><p>Unverified: no CVE has been catalogued for this version, but that does not confirm it is safe. See the Static Analysis tab to run a real scan of its published source.</p></div><div class="tab-panel" data-dep="dep-7" data-tab="behavioral" hidden><p>Release frequency deviation 1.81</p><p>Maintainer count 1</p><p>Version jump irregularity 3.30</p><p>Download to age ratio 159495.96</p><p>Anomaly detected - publishing pattern looks unusual</p><p>Flagged due to an irregular version jump between releases and an unusual download to age ratio.</p><p>This dependency has no catalogued CVE and its publishing pattern looks unusual - prioritize running a static scan on it over other Unverified dependencies.</p></div><div class="tab-panel" data-dep="dep-7" data-tab="scorecard" hidden><p>No OpenSSF Scorecard data available for this dependency&#x27;s repository.</p></div><div class="tab-panel" data-dep="dep-7" data-tab="static_scan" hidden><p>Not run for this dependency. This scan only runs when no CVE was found for this version at all, and only outside cached-demo mode, since it downloads the package&#x27;s real published source.</p></div>
+    </section>
+    <section class="dep-card" data-package="dlib" data-severity="Unverified">
+      <div class="dep-header">
+        <div class="dep-name-group">
+          <span class="dep-name">dlib</span>
+          <span class="dep-version">20.0.1</span>
+          <span class="accepted-tag">PYPI</span>
+          
+        </div>
+        <div class="dep-badges">
+          
+          
+          
+          
+          <span class="severity-badge sev-unverified">UNVERIFIED</span>
+        </div>
+      </div>
+      <div class="tab-bar"><button type="button" class="tab-btn active" onclick="scShowTab(this, 'dep-8', 'recommendation')">Recommendation</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-8', 'cvss')">CVSS</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-8', 'severity')">Severity</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-8', 'behavioral')">Behavioral</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-8', 'scorecard')">Scorecard</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-8', 'static_scan')">Static Analysis</button></div>
+      <div class="tab-panel" data-dep="dep-8" data-tab="recommendation"><p>No CVE ID exists for dlib at this version - it has not been catalogued as vulnerable anywhere. This does not confirm it is safe - run a static code scan to check its real published source before proceeding.</p></div><div class="tab-panel" data-dep="dep-8" data-tab="cvss" hidden><p>No CVSS score or CVE record was found for this version.</p></div><div class="tab-panel" data-dep="dep-8" data-tab="severity" hidden><p>Unverified: no CVE has been catalogued for this version, but that does not confirm it is safe. See the Static Analysis tab to run a real scan of its published source.</p></div><div class="tab-panel" data-dep="dep-8" data-tab="behavioral" hidden><p>Release frequency deviation 0.00</p><p>Maintainer count 0</p><p>Version jump irregularity 0.00</p><p>Download to age ratio 0.00</p><p>No anomaly detected - publishing pattern looks typical</p><p>Not flagged. Primary contributing factors were a steady release cadence and a healthy maintainer pool of 0 maintainers.</p></div><div class="tab-panel" data-dep="dep-8" data-tab="scorecard" hidden><p>Overall score for davisking/dlib: 4.3 out of 10, a measure of the project&#x27;s own repository health (code review, maintenance, branch protection), not of this specific pinned version.</p><p>Maintained: 10 out of 10.</p><p>Code-Review: 6 out of 10.</p><p>Packaging: not applicable to this project.</p><p>Dangerous-Workflow: 10 out of 10.</p><p>CII-Best-Practices: 0 out of 10.</p></div><div class="tab-panel" data-dep="dep-8" data-tab="static_scan" hidden><p>Not run for this dependency. This scan only runs when no CVE was found for this version at all, and only outside cached-demo mode, since it downloads the package&#x27;s real published source.</p></div>
+    </section>
+    <section class="dep-card" data-package="iniconfig" data-severity="Unverified">
+      <div class="dep-header">
+        <div class="dep-name-group">
+          <span class="dep-name">iniconfig</span>
+          <span class="dep-version">2.0.0</span>
+          <span class="accepted-tag">PYPI</span>
+          
+        </div>
+        <div class="dep-badges">
+          
+          
+          
+          
+          <span class="severity-badge sev-unverified">UNVERIFIED</span>
+        </div>
+      </div>
+      <div class="tab-bar"><button type="button" class="tab-btn active" onclick="scShowTab(this, 'dep-9', 'recommendation')">Recommendation</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-9', 'cvss')">CVSS</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-9', 'severity')">Severity</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-9', 'behavioral')">Behavioral</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-9', 'scorecard')">Scorecard</button><button type="button" class="tab-btn" onclick="scShowTab(this, 'dep-9', 'static_scan')">Static Analysis</button></div>
+      <div class="tab-panel" data-dep="dep-9" data-tab="recommendation"><p>No CVE ID exists for iniconfig at this version - it has not been catalogued as vulnerable anywhere. This does not confirm it is safe - run a static code scan to check its real published source before proceeding.</p></div><div class="tab-panel" data-dep="dep-9" data-tab="cvss" hidden><p>No CVSS score or CVE record was found for this version.</p></div><div class="tab-panel" data-dep="dep-9" data-tab="severity" hidden><p>Unverified: no CVE has been catalogued for this version, but that does not confirm it is safe. See the Static Analysis tab to run a real scan of its published source.</p></div><div class="tab-panel" data-dep="dep-9" data-tab="behavioral" hidden><p>Release frequency deviation 0.00</p><p>Maintainer count 0</p><p>Version jump irregularity 0.00</p><p>Download to age ratio 0.00</p><p>No anomaly detected - publishing pattern looks typical</p><p>Not flagged. Primary contributing factors were a steady release cadence and a healthy maintainer pool of 0 maintainers.</p></div><div class="tab-panel" data-dep="dep-9" data-tab="scorecard" hidden><p>No OpenSSF Scorecard data available for this dependency&#x27;s repository.</p></div><div class="tab-panel" data-dep="dep-9" data-tab="static_scan" hidden><p>Not run for this dependency. This scan only runs when no CVE was found for this version at all, and only outside cached-demo mode, since it downloads the package&#x27;s real published source.</p></div>
+    </section>
+<div class="chart-container">
+  <canvas id="severityChart" width="560" height="360"></canvas>
+</div>
+<footer>Generated by SecureChain. This report is static; re-run a scan to refresh it.</footer>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+  function scShowTab(button, depId, tabName) {
+    var panels = document.querySelectorAll('.tab-panel[data-dep="' + depId + '"]');
+    for (var i = 0; i < panels.length; i++) {
+      panels[i].hidden = panels[i].getAttribute('data-tab') !== tabName;
+    }
+    var buttons = button.parentElement.querySelectorAll('.tab-btn');
+    for (var j = 0; j < buttons.length; j++) {
+      buttons[j].classList.remove('active');
+    }
+    button.classList.add('active');
+  }
+
+  function scFilterBySeverity(button, tier) {
+    var cards = document.querySelectorAll('.dep-card');
+    for (var i = 0; i < cards.length; i++) {
+      var show = (tier === 'all' || cards[i].getAttribute('data-severity') === tier);
+      cards[i].style.display = show ? '' : 'none';
+    }
+    var badges = button.parentElement.querySelectorAll('.severity-badge');
+    for (var j = 0; j < badges.length; j++) {
+      badges[j].classList.remove('active');
+    }
+    button.classList.add('active');
+  }
+
+  function scToggleTheme() {
+    var root = document.documentElement;
+    var current = root.getAttribute('data-theme');
+    var next = current === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem('securechain-theme', next); } catch (e) {}
+  }
+  (function () {
+    try {
+      var saved = localStorage.getItem('securechain-theme');
+      if (saved) document.documentElement.setAttribute('data-theme', saved);
+    } catch (e) {}
+  })();
+
+  var chartData = {"labels": ["Critical", "High", "Medium", "Low", "Unverified", "Safe"], "counts": [1, 4, 1, 1, 3, 0], "colors": ["#b0261a", "#b85c00", "#c99a1e", "#2c5f9e", "#6b6b76", "#227a3d"]};
+  new Chart(document.getElementById('severityChart'), {
+    type: 'bar',
+    data: {
+      labels: chartData.labels,
+      datasets: [{
+        label: 'Dependencies per severity tier',
+        data: chartData.counts,
+        backgroundColor: chartData.colors
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+    }
+  });
+</script>

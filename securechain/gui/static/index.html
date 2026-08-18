@@ -111,6 +111,14 @@
   .hint { font-size: 0.76rem; color: var(--text-secondary); line-height: 1.4; }
   .divider { border-top: 1px solid var(--border); margin: 0.2rem 0; }
 
+  #unverifiedSection { border-top: 2px solid var(--border); margin-top: 1.5rem; padding-top: 1rem; }
+  #unverifiedSection h2 { font-size: 1rem; margin: 0 0 0.3rem; }
+  .staticScanBtn {
+    padding: 0.45rem 0.9rem; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text); font-weight: 600; cursor: pointer;
+  }
+  .staticScanBtn:disabled { opacity: 0.6; cursor: default; }
+
   .stat-mini-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; }
   .stat-mini { border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.5rem; text-align: center; background: var(--surface); }
   .stat-mini .n { font-weight: 700; font-size: 1.05rem; }
@@ -191,6 +199,7 @@
   .legend button.sev-high { background: #b85c00; color: #fff; }
   .legend button.sev-medium { background: #c99a1e; color: #2b2103; }
   .legend button.sev-low { background: #2c5f9e; color: #fff; }
+  .legend button.sev-unverified { background: #6b6b76; color: #fff; }
   .legend button.sev-safe { background: #227a3d; color: #fff; }
 
   .card {
@@ -224,6 +233,7 @@
   .badge.sev-high { background: #b85c00; color: #fff; }
   .badge.sev-medium { background: #c99a1e; color: #2b2103; }
   .badge.sev-low { background: #2c5f9e; color: #fff; }
+  .badge.sev-unverified { background: #6b6b76; color: #fff; }
   .badge.sev-safe { background: #227a3d; color: #fff; }
   .badge.accepted { background: var(--surface-2); color: var(--text-secondary); border: 1px solid var(--border); }
   .badge.kev { background: var(--surface-2); color: var(--text-secondary); border: 1px solid var(--border); }
@@ -282,7 +292,6 @@
   </div>
 
   <div class="field" id="manifestPickWrap" style="display:none;">
-    <div class="field-label">package.json found</div>
     <select id="manifestSelect"></select>
   </div>
 
@@ -345,6 +354,13 @@
     <div id="gateBanner"></div>
     <div id="legend" class="legend"></div>
     <div id="cards"></div>
+
+    <div id="unverifiedSection" style="display:none;">
+      <h2>New / Unverified Libraries</h2>
+      <p class="hint">No catalogued CVE was found for these, but that does not confirm they are safe.
+        Run a static scan of each one's real published source to verify before trusting it.</p>
+      <div id="unverifiedCards"></div>
+    </div>
   </div>
 
   <footer class="credit">SecureChain local preview. The pushed CI run is the result that actually counts.</footer>
@@ -352,13 +368,20 @@
 
 <script>
 const SEV_ORDER = ["Critical", "High", "Medium", "Low", "Safe"];
-const SEV_SCALE = ["Safe", "Low", "Medium", "High", "Critical"];
-const SEV_CLASS = {Critical: "sev-critical", High: "sev-high", Medium: "sev-medium", Low: "sev-low", Safe: "sev-safe"};
+const SEV_SCALE = ["Safe", "Unverified", "Low", "Medium", "High", "Critical"];
+const SEV_CLASS = {Critical: "sev-critical", High: "sev-high", Medium: "sev-medium", Low: "sev-low", Unverified: "sev-unverified", Safe: "sev-safe"};
 
 let currentReport = null;
 let currentGate = null;
 let acceptedKeys = [];
 let activeFilter = "all";
+
+// The real, session-based identity of whoever is running this GUI right
+// now (the actual logged-in OS username, or the CI actor in CI) - used to
+// auto-fill and lock the "accepted by" field, so it can't just be typed
+// over to falsely attribute a risk acceptance to someone else.
+let currentUserIdentity = "unknown";
+fetch("/api/whoami").then(r => r.json()).then(d => { currentUserIdentity = d.identity || "unknown"; }).catch(() => {});
 
 const folderInput = document.getElementById("folderInput");
 const manifestHint = document.getElementById("manifestHint");
@@ -449,14 +472,14 @@ async function checkManifest() {
 
   foundManifests = data.manifests || [];
   if (foundManifests.length === 0) {
-    manifestHint.textContent = "No package.json was found in that folder or its subfolders.";
+    manifestHint.textContent = "No dependency file was found in that folder or its subfolders.";
     scanBtn.disabled = true;
     return;
   }
 
   manifestHint.textContent = foundManifests.length === 1
     ? "Found " + foundManifests[0].path + ". Ready to scan."
-    : "Found " + foundManifests.length + " package.json files. Pick one to scan.";
+    : "Found " + foundManifests.length + " dependency files. Pick one to scan.";
   scanBtn.disabled = false;
 
   manifestSelect.innerHTML = "";
@@ -595,25 +618,29 @@ function renderCvssTab(dep) {
   return html;
 }
 
-function severityReasonLines(dep) {
-  if (dep.escalated) {
-    return ["Base severity is " + dep.base_severity + " from CVSS analysis. A behavioral anomaly was detected, escalating it by one tier to " + dep.severity + "."];
-  }
-  if (dep.anomaly_flagged) {
-    return ["Base severity is " + dep.base_severity + " from CVSS analysis. A behavioral anomaly was also detected, but " + dep.severity + " was already at the top of the scale, so it could not escalate further."];
-  }
-  return ["Base severity is " + dep.base_severity + " from CVSS analysis and stayed at " + dep.severity + ", since no behavioral anomaly was detected."];
-}
-
 function exploitSummaryLines(dep) {
   return dep.cvss.summary ? [dep.cvss.summary] : [];
 }
 
-function riskScoreLines(dep) {
-  const lines = ["Contextual risk score " + dep.risk_score.toFixed(2) + " from the Random Forest classifier."];
-  const explanation = (dep.shap && dep.shap.classifier && dep.shap.classifier.explanation_text) || "";
-  if (explanation) lines.push(explanation);
-  return lines;
+function severityReasonLines(dep) {
+  if (dep.lookup_status === "ok") {
+    return ["Severity is " + dep.severity + ", based on this version's CVSS score. See the CVSS tab for details."];
+  }
+  if (dep.severity === "Unverified") {
+    return ["Unverified: no CVE has been catalogued for this version, but that does not confirm it is " +
+      "safe. See the Static Analysis tab to run a real scan of its published source."];
+  }
+  if (dep.severity === "Safe") {
+    return ["Safe: no CVE has been catalogued, and a static scan of its real published source found nothing suspicious."];
+  }
+  if (dep.severity === "Critical") {
+    return ["Critical: no CVE has been catalogued, but static analysis traced a confirmed data-flow " +
+      "chain from a suspicious source into a dangerous sink in its real source code - concrete " +
+      "evidence, not a keyword coincidence. See the Static Analysis tab for details."];
+  }
+  return ["High: no CVE has been catalogued, but static analysis found a suspicious pattern inside an " +
+    "install-time script, which runs automatically as soon as this package is installed. See the " +
+    "Static Analysis tab for details."];
 }
 
 function renderSeverityTab(dep) {
@@ -623,23 +650,30 @@ function renderSeverityTab(dep) {
     html += "<p class=\"tab-subheading\">How This Could Be Exploited</p>";
     html += paragraphs(exploitLines);
   }
-  html += "<p class=\"tab-subheading\">Risk Score Explanation</p>";
-  html += paragraphs(riskScoreLines(dep));
   return html;
 }
 
 function behavioralLines(dep) {
-  const b = dep.behavioral;
+  const b = dep.behavioral || {};
+  if (!b || Object.keys(b).length === 0) return ["No behavioral data available for this dependency."];
   const lines = [
     "Release frequency deviation " + b.release_frequency_deviation.toFixed(2),
     "Maintainer count " + b.maintainer_count,
     "Version jump irregularity " + b.version_jump_irregularity.toFixed(2),
     "Download to age ratio " + b.download_age_ratio.toFixed(2),
-    dep.anomaly_flagged ? "Anomaly detected" : "No anomaly detected",
+    dep.anomaly_flagged ? "Anomaly detected - publishing pattern looks unusual" : "No anomaly detected - publishing pattern looks typical",
   ];
-  const explanation = (dep.shap && dep.shap.anomaly && dep.shap.anomaly.explanation_text) || "";
+  const explanation = (dep.anomaly_explanation && dep.anomaly_explanation.explanation_text) || "";
   if (explanation) lines.push(explanation);
+  if (dep.anomaly_flagged && dep.severity === "Unverified") {
+    lines.push("This dependency has no catalogued CVE and its publishing pattern looks unusual - " +
+      "prioritize running a static scan on it over other Unverified dependencies.");
+  }
   return lines;
+}
+
+function renderBehavioralTab(dep) {
+  return paragraphs(behavioralLines(dep));
 }
 
 function scorecardLines(dep) {
@@ -657,12 +691,56 @@ function scorecardLines(dep) {
   return lines;
 }
 
-function renderBehavioralTab(dep) {
-  let html = paragraphs(behavioralLines(dep));
+function renderScorecardTab(dep) {
   const scLines = scorecardLines(dep);
-  if (scLines.length) {
-    html += "<p class=\"tab-subheading\">OpenSSF Scorecard</p>";
-    html += paragraphs(scLines);
+  if (!scLines.length) {
+    return paragraphs(["No OpenSSF Scorecard data available for this dependency's repository."]);
+  }
+  return paragraphs(scLines);
+}
+
+function staticScanReasonLines(dep) {
+  const ss = dep.static_scan || {};
+  if (ss.status === "not_run") {
+    return ["Not run for this dependency. This scan only runs when no CVE was found for this " +
+      "version at all, and only outside cached-demo mode, since it downloads the package's real " +
+      "published source."];
+  }
+  if (ss.status === "lookup_failed") {
+    return ["Could not complete: " + ((ss.indicators && ss.indicators[0]) || "unknown reason")];
+  }
+  const filesScanned = ss.files_scanned || 0;
+  const indicators = ss.indicators || [];
+  if (!indicators.length) {
+    return ["Scanned " + filesScanned + " source file(s) from the package's real published release. " +
+      "No indicators from the checked list were found."];
+  }
+  const lines = [
+    "Scanned " + filesScanned + " source file(s) from the package's real published release.",
+    "Indicators present: " + indicators.join("; ") + ".",
+  ];
+  if (!ss.flagged) {
+    lines.push("Not flagged even so - this is not a determination of malicious intent, it narrows " +
+      "down where a human reviewer might look, nothing more.");
+  }
+  return lines;
+}
+
+function staticScanRiskLines(dep) {
+  const ss = dep.static_scan || {};
+  if (ss.status !== "ok" || ss.ml_risk_score === null || ss.ml_risk_score === undefined) return [];
+  const lines = ["Static-scan risk score " + ss.ml_risk_score.toFixed(2) + " from the trained classifier."];
+  const explanation = (ss.ml_explanation && ss.ml_explanation.explanation_text) || "";
+  if (explanation) lines.push(explanation);
+  return lines;
+}
+
+function renderStaticScanTab(dep) {
+  let html = paragraphs(staticScanReasonLines(dep));
+  const riskLines = staticScanRiskLines(dep);
+  if (riskLines.length) {
+    html += "<p class=\"tab-subheading\">Static Analysis Risk Score</p>";
+    html += paragraphs(riskLines);
   }
   return html;
 }
@@ -677,14 +755,7 @@ function escapeHtml(s) {
   return div.innerHTML;
 }
 
-function renderCards() {
-  const container = document.getElementById("cards");
-  container.innerHTML = "";
-  const deps = [...currentReport.dependencies].sort((a, b) => tierIndex(b.severity) - tierIndex(a.severity));
-
-  for (const dep of deps) {
-    if (activeFilter !== "all" && dep.severity !== activeFilter) continue;
-
+function buildCard(dep) {
     const card = document.createElement("section");
     card.className = "card";
 
@@ -693,12 +764,22 @@ function renderCards() {
     const kevTag = (dep.exploit_intel && dep.exploit_intel.in_kev) ? "<span class=\"badge kev\">KEV LISTED</span>" : "";
     const acceptedTag = isAccepted ? "<span class=\"badge accepted\">ACCEPTED</span>" : "";
     const transitiveTag = dep.is_direct === false ? "<span class=\"badge accepted\">TRANSITIVE</span>" : "";
+    const staticScan = dep.static_scan || {};
+    const staticScanTag = staticScan.status !== "ok" ? "" :
+      staticScan.flagged
+        ? "<span class=\"badge kev\">STATIC SCAN: REVIEW</span>"
+        : "<span class=\"badge accepted\">STATIC SCAN: CLEAN</span>";
+    // A triage signal, not a severity claim - helps prioritize which
+    // Unverified dependencies deserve a static scan first.
+    const priorityTag = (dep.anomaly_flagged && dep.severity === "Unverified")
+      ? "<span class=\"badge kev\" title=\"Publishing pattern looks unusual - see the Behavioral tab\">PRIORITIZE SCAN</span>"
+      : "";
 
     const head = document.createElement("div");
     head.className = "card-head";
     head.innerHTML =
       "<div class=\"name-group\"><span class=\"name\">" + escapeHtml(dep.package) + "</span><span class=\"version\">" + escapeHtml(dep.version) + "</span><span class=\"badge accepted\">" + escapeHtml((dep.ecosystem || "npm").toUpperCase()) + "</span>" + transitiveTag + "</div>" +
-      "<div class=\"badges\">" + acceptedTag + kevTag + "<span class=\"badge " + SEV_CLASS[dep.severity] + "\">" + dep.severity.toUpperCase() + "</span></div>";
+      "<div class=\"badges\">" + acceptedTag + kevTag + staticScanTag + priorityTag + "<span class=\"badge " + SEV_CLASS[dep.severity] + "\">" + dep.severity.toUpperCase() + "</span></div>";
     card.appendChild(head);
 
     const fixedVersion = dep.cvss && dep.cvss.fixed_version;
@@ -712,7 +793,14 @@ function renderCards() {
       ["cvss", "CVSS", renderCvssTab(dep)],
       ["severity", "Severity", renderSeverityTab(dep)],
       ["behavioral", "Behavioral", renderBehavioralTab(dep)],
+      ["scorecard", "Scorecard", renderScorecardTab(dep)],
     ];
+    // Only meaningful for a dependency with no catalogued CVE - for a known
+    // vulnerability this tab would only ever say "not run", which is clutter,
+    // not information.
+    if (dep.lookup_status !== "ok") {
+      tabs.push(["static_scan", "Static Analysis", renderStaticScanTab(dep)]);
+    }
 
     const tabBar = document.createElement("div");
     tabBar.className = "tab-bar";
@@ -770,19 +858,63 @@ function renderCards() {
       });
     }
 
-    if (dep.severity !== "Safe" && !isAccepted) {
+    const isStaticScanFlagged = dep.lookup_status !== "ok" && (dep.severity === "Critical" || dep.severity === "High");
+
+    if (isStaticScanFlagged && !isAccepted) {
+      const box = document.createElement("div");
+      box.className = "accept-box";
+      box.innerHTML =
+        "<div class=\"field-label\">Static analysis flagged this - has a human reviewed it?</div>" +
+        "<div class=\"row\">" +
+        "<button class=\"confirmMaliciousBtn\">Confirmed malicious - keep blocking</button>" +
+        "<button class=\"falsePositiveBtn\">False positive - this is a good package</button>" +
+        "</div>" +
+        "<div class=\"row falsePositiveForm\" style=\"display:none;\">" +
+        "<input type=\"text\" placeholder=\"Reason (optional)\" class=\"reasonInput\" />" +
+        "<input type=\"text\" readonly title=\"Auto-detected from your logged-in session, not editable\" " +
+        "value=\"" + escapeHtml(currentUserIdentity) + "\" class=\"nameInput\" style=\"max-width:9rem;\" />" +
+        "<button class=\"confirmFalsePositiveBtn\">Confirm</button>" +
+        "</div>";
+
+      // One click, no form - this doesn't change anything the tool already
+      // concluded, it just records that a person looked and agreed.
+      box.querySelector(".confirmMaliciousBtn").addEventListener("click", () => {
+        box.innerHTML = "<div class=\"field-label\">Confirmed malicious by " + escapeHtml(currentUserIdentity) + " - still blocking.</div>";
+      });
+
+      box.querySelector(".falsePositiveBtn").addEventListener("click", () => {
+        box.querySelector(".falsePositiveForm").style.display = "flex";
+      });
+
+      box.querySelector(".confirmFalsePositiveBtn").addEventListener("click", async () => {
+        const reason = box.querySelector(".reasonInput").value.trim() || "Reviewed and confirmed not malicious.";
+        const acceptedBy = currentUserIdentity;
+        const res = await fetch("/api/accept", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({folder: folderInput.value.trim(), package: dep.package, version: dep.version, reason, accepted_by: acceptedBy}),
+        });
+        const data = await res.json();
+        if (data.error) { alert(data.error); return; }
+        dep.severity = "Safe";
+        renderCards();
+      });
+
+      card.appendChild(box);
+    } else if (dep.severity !== "Safe" && !isAccepted) {
       const box = document.createElement("div");
       box.className = "accept-box";
       box.innerHTML =
         "<div class=\"field-label\">Accept this risk</div>" +
         "<div class=\"row\">" +
         "<input type=\"text\" placeholder=\"Reason\" class=\"reasonInput\" />" +
-        "<input type=\"text\" placeholder=\"Your name\" value=\"Warren\" class=\"nameInput\" style=\"max-width:9rem;\" />" +
+        "<input type=\"text\" readonly title=\"Auto-detected from your logged-in session, not editable\" " +
+        "value=\"" + escapeHtml(currentUserIdentity) + "\" class=\"nameInput\" style=\"max-width:9rem;\" />" +
         "<button class=\"acceptBtn\">Accept</button>" +
         "</div>";
       box.querySelector(".acceptBtn").addEventListener("click", async () => {
         const reason = box.querySelector(".reasonInput").value.trim();
-        const acceptedBy = box.querySelector(".nameInput").value.trim();
+        const acceptedBy = currentUserIdentity;
         if (!reason) { alert("A reason is required."); return; }
         const res = await fetch("/api/accept", {
           method: "POST",
@@ -796,7 +928,79 @@ function renderCards() {
       card.appendChild(box);
     }
 
-    container.appendChild(card);
+    if (dep.severity === "Unverified") {
+      const scanBox = document.createElement("div");
+      scanBox.className = "accept-box";
+      scanBox.innerHTML =
+        "<div class=\"field-label\">No CVE found - this does not confirm it is safe</div>" +
+        "<button class=\"staticScanBtn\">Scan static code</button>";
+      scanBox.querySelector(".staticScanBtn").addEventListener("click", async (event) => {
+        const btn = event.target;
+        btn.disabled = true;
+        btn.textContent = "Scanning";
+        try {
+          const chosenManifest = foundManifests.length ? (manifestSelect.value || foundManifests[0].path) : "package.json";
+          const res = await fetch("/api/static-scan", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({folder: folderInput.value.trim(), manifest: chosenManifest, package: dep.package, version: dep.version, ecosystem: dep.ecosystem || "npm"}),
+          });
+          const data = await res.json();
+          if (data.error) { alert(data.error); return; }
+
+          if (data.severity === "Safe") {
+            alert("Scan complete for " + dep.package + "@" + dep.version + ":\n\n" +
+              "SAFE - no suspicious indicators found in its real published source. " +
+              "It will now move to the Safe category.");
+          } else {
+            alert("Scan complete for " + dep.package + "@" + dep.version + ":\n\n" +
+              data.severity.toUpperCase() + " - flagged for review. " +
+              "It will now move to the " + data.severity + " category.\n\n" + data.recommendation);
+          }
+
+          dep.severity = data.severity;
+          dep.static_scan = data.static_scan;
+          dep.recommendation = data.recommendation;
+          renderCards();
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Scan static code";
+        }
+      });
+      card.appendChild(scanBox);
+    }
+
+    return card;
+}
+
+function renderCards() {
+  const knownContainer = document.getElementById("cards");
+  const unverifiedContainer = document.getElementById("unverifiedCards");
+  knownContainer.innerHTML = "";
+  unverifiedContainer.innerHTML = "";
+
+  const deps = [...currentReport.dependencies].sort((a, b) => tierIndex(b.severity) - tierIndex(a.severity));
+  // A dependency only stays in the Unverified section while it's actually
+  // still pending a scan. Once resolved (Safe or Critical, whether from a
+  // real CVE or a completed static scan), it graduates into the normal
+  // cards area and is sorted/filtered the same as everything else.
+  const knownVulnDeps = deps.filter(d => d.severity !== "Unverified");
+  const unverifiedDeps = deps.filter(d => d.severity === "Unverified");
+
+  for (const dep of knownVulnDeps) {
+    if (activeFilter !== "all" && dep.severity !== activeFilter) continue;
+    knownContainer.appendChild(buildCard(dep));
+  }
+
+  // Unverified dependencies only ever match the "all" or "Unverified"
+  // filter (never Safe/Low/Medium/High/Critical) - the section itself must
+  // only show when something will actually appear under it after filtering,
+  // not just when the whole dataset happens to contain some Unverified
+  // dependency somewhere.
+  const visibleUnverifiedDeps = unverifiedDeps.filter(d => activeFilter === "all" || d.severity === activeFilter);
+  document.getElementById("unverifiedSection").style.display = visibleUnverifiedDeps.length ? "block" : "none";
+  for (const dep of visibleUnverifiedDeps) {
+    unverifiedContainer.appendChild(buildCard(dep));
   }
 }
 

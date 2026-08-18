@@ -26,6 +26,13 @@ ANOMALY_FEATURE_NAMES = [
     "download_age_ratio",
 ]
 
+STATIC_SCAN_FEATURE_NAMES = [
+    "category_count",
+    "has_install_hook",
+    "taint_chain_confirmed",
+    "files_scanned",
+]
+
 
 def classifier_vector(cvss_score: Optional[float], behavioral: BehavioralFeatures) -> list[float]:
     return [cvss_score or 0.0, *behavioral.as_vector()]
@@ -33,3 +40,9 @@ def classifier_vector(cvss_score: Optional[float], behavioral: BehavioralFeature
 
 def anomaly_vector(behavioral: BehavioralFeatures) -> list[float]:
     return behavioral.as_vector()
+
+
+def static_scan_vector(
+    category_count: int, has_install_hook: bool, taint_chain_confirmed: bool, files_scanned: int
+) -> list[float]:
+    return [float(category_count), float(has_install_hook), float(taint_chain_confirmed), float(files_scanned)]

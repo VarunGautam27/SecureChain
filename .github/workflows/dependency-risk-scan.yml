@@ -10,23 +10,26 @@ name: Dependency Risk Scan
 # Default policy is --max-severity safe: only genuinely Safe dependencies
 # pass freely. A risk is a risk regardless of tier, Low, Medium, High, and
 # Critical all block the build unless a dependency is explicitly recorded in
-# .riskignore.json.
+# .riskignore.json. Unverified (no catalogued CVE, not yet static-scanned -
+# see securechain/severity.py) blocks the same way Low does, since a
+# dependency nobody has actually checked should not silently pass either.
 #
-# There is a single demo manifest now, demo/package.json, with all 5
-# severity tiers present at once. It is used both as the manual, hands on
-# exercise and as the CI demonstration, so nothing here depends on a
-# separate vulnerable or fixed copy that could drift out of sync with it.
+# demo/package.json is a curated, exact-count manifest: 2 Critical, 2 High,
+# 2 Medium (real CVEs) and 5 Unverified (no CVE - canvas included
+# specifically to demonstrate the static-scan path, verified live to
+# resolve to High). It is used both as the manual, hands-on exercise and as
+# the CI demonstration, so nothing here depends on a separate vulnerable or
+# fixed copy that could drift out of sync with it.
 
 on:
   push:
   pull_request:
 
 jobs:
-  # 1. Scans demo/package.json exactly as committed. Only colors has an
-  #    already recorded exception in .riskignore.json, so every other
-  #    flagged dependency is expected to block the build. This job is
-  #    expected to turn red, intentional, demonstrating the gate actually
-  #    blocking a build.
+  # 1. Scans demo/package.json exactly as committed. .riskignore.json is
+  #    empty, so all 11 dependencies (6 real CVEs, 5 Unverified) are expected
+  #    to block the build. This job is expected to turn red, intentional,
+  #    demonstrating the gate actually blocking a build.
   scan-demo-manifest:
     runs-on: ubuntu-latest
     steps:
@@ -51,12 +54,16 @@ jobs:
             result/report.json
             result/report.html
 
-  # 2. Same manifest, same scan, but every remaining flagged dependency gets
-  #    a recorded exception first (simulating a developer who reviewed each
-  #    one and chose to accept the risk rather than upgrade, using a
-  #    temporary copy of .riskignore.json so the committed file is
-  #    untouched). The gate passes with warnings logged instead of failing,
-  #    demonstrating the exception mechanism end to end.
+  # 2. Same manifest, same scan, but every flagged dependency gets a recorded
+  #    exception first (simulating a developer who reviewed each one and
+  #    chose to accept the risk rather than upgrade, using a temporary copy
+  #    of .riskignore.json so the committed file is untouched). This
+  #    includes both the 6 real-CVE dependencies AND the 5 no-CVE
+  #    dependencies sitting Unverified (a cached/offline scan never runs the
+  #    static scan, so they can't resolve to Safe here - accepting is the
+  #    only way to clear an Unverified dependency without a live scan). The
+  #    gate passes with warnings logged instead of failing, demonstrating
+  #    the exception mechanism end to end.
   scan-demo-manifest-with-exceptions:
     runs-on: ubuntu-latest
     steps:
@@ -70,18 +77,30 @@ jobs:
         run: |
           securechain scan demo/package.json --cache-dir demo/fixtures --offline \
             --output result/report-exception.json --html result/report-exception.html
-      - name: Record accepted exceptions for every remaining flagged dependency
+      - name: Record accepted exceptions for every flagged dependency
         run: |
           cp .riskignore.json .riskignore.ci-demo.json
+          securechain accept xml2js@0.4.19 --reason "CI demo: accepted pending upstream upgrade" \
+            --ignore-file .riskignore.ci-demo.json --accepted-by "ci-demo"
+          securechain accept node-ipc@9.2.1 --reason "CI demo: accepted pending upstream upgrade" \
+            --ignore-file .riskignore.ci-demo.json --accepted-by "ci-demo"
+          securechain accept moment@2.29.1 --reason "CI demo: accepted pending upstream upgrade" \
+            --ignore-file .riskignore.ci-demo.json --accepted-by "ci-demo"
+          securechain accept tar@6.1.0 --reason "CI demo: accepted pending upstream upgrade" \
+            --ignore-file .riskignore.ci-demo.json --accepted-by "ci-demo"
           securechain accept minimist@1.2.0 --reason "CI demo: accepted pending upstream upgrade" \
             --ignore-file .riskignore.ci-demo.json --accepted-by "ci-demo"
           securechain accept axios@1.5.0 --reason "CI demo: accepted pending upstream upgrade" \
             --ignore-file .riskignore.ci-demo.json --accepted-by "ci-demo"
-          securechain accept moment@2.29.1 --reason "CI demo: accepted pending upstream upgrade" \
+          securechain accept lodash@4.17.21 --reason "CI demo: no CVE, accepted pending a live static scan" \
             --ignore-file .riskignore.ci-demo.json --accepted-by "ci-demo"
-          securechain accept xml2js@0.4.19 --reason "CI demo: accepted pending upstream upgrade" \
+          securechain accept chalk@5.3.0 --reason "CI demo: no CVE, accepted pending a live static scan" \
             --ignore-file .riskignore.ci-demo.json --accepted-by "ci-demo"
-          securechain accept node-ipc@9.2.1 --reason "CI demo: accepted pending upstream upgrade" \
+          securechain accept uuid@9.0.1 --reason "CI demo: no CVE, accepted pending a live static scan" \
+            --ignore-file .riskignore.ci-demo.json --accepted-by "ci-demo"
+          securechain accept debug@4.3.4 --reason "CI demo: no CVE, accepted pending a live static scan" \
+            --ignore-file .riskignore.ci-demo.json --accepted-by "ci-demo"
+          securechain accept canvas@3.2.3 --reason "CI demo: no CVE, accepted pending a live static scan (resolves to High if scanned live)" \
             --ignore-file .riskignore.ci-demo.json --accepted-by "ci-demo"
       - name: Gate with the exceptions on file (expected to PASS with warnings)
         run: securechain check result/report-exception.json --ignore-file .riskignore.ci-demo.json

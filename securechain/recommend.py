@@ -16,7 +16,6 @@ def generate_recommendation(
     package: str,
     severity: str,
     lookup_result: LookupResult,
-    anomaly_flagged: bool,
     exploit_intel: Optional[ExploitIntelResult] = None,
     is_direct: bool = True,
 ) -> str:
@@ -57,10 +56,62 @@ def generate_recommendation(
             "Manual mitigation required, such as replacing the dependency or applying a vendor patch."
         )
 
-    if anomaly_flagged:
-        return (
-            "No known CVE was found for this dependency, but its behavioral profile is unusual. "
-            "Manually audit this dependency before deploying."
-        )
-
     return "No action required."
+
+
+
+# Deliberately small and hand-verified, not a general auto-suggestion engine -
+# a real alternative-library lookup for an arbitrary package would need
+# either a live knowledge source or a much larger curated database. Only
+# entries here have actually been checked; everything else gets an honest
+# generic fallback instead of an invented name.
+_KNOWN_ALTERNATIVES = {
+    "canvas": (
+        "skia-canvas is a real, actively-maintained alternative offering a similar Canvas-API "
+        "surface (uses Skia instead of Cairo) - verify it fits your exact use case before switching, "
+        "it is not a guaranteed drop-in replacement."
+    ),
+}
+
+
+def _alternative_suggestion(package: str) -> str:
+    if package in _KNOWN_ALTERNATIVES:
+        return f" A known alternative: {_KNOWN_ALTERNATIVES[package]}"
+    return (
+        " No specific alternative is suggested here - this tool does not have verified knowledge of "
+        "this package's purpose, so search for an actively-maintained library providing equivalent "
+        "functionality rather than trust an invented suggestion."
+    )
+
+
+def generate_static_scan_recommendation(package: str, static_scan) -> str:
+    """For a dependency with no catalogued CVE at all - never assumed safe
+    just because nothing was found. Recommendation depends on whether a
+    static scan has actually run yet, and if so, what it found.
+    """
+    if static_scan.status != "ok":
+        return (
+            f"No CVE ID exists for {package} at this version - it has not been catalogued as "
+            "vulnerable anywhere. This does not confirm it is safe - run a static code scan to check "
+            "its real published source before proceeding."
+        )
+    if static_scan.flag_reason == "confirmed_chain":
+        return (
+            f"No CVE ID exists for {package} - it has not been catalogued as vulnerable anywhere, and "
+            f"no official patch exists as a result. However, static analysis traced an actual data-flow "
+            f"chain from a suspicious source into a dangerous sink in its real source code: this is "
+            f"concrete evidence of critical, exploitable behavior, not a keyword coincidence. Since "
+            f"there is no patch to apply for an uncatalogued issue, remove this dependency and replace "
+            f"it with an alternative immediately; do not deploy it as-is." + _alternative_suggestion(package)
+        )
+    if static_scan.flag_reason == "install_hook":
+        return (
+            f"No CVE ID exists for {package} - it has not been catalogued as vulnerable anywhere. "
+            f"However, static analysis found a suspicious pattern inside an install-time script, which "
+            f"runs automatically the moment this package is installed, before it is even used. Manually "
+            f"review that install script before allowing this dependency in your tree." + _alternative_suggestion(package)
+        )
+    return (
+        f"Static analysis of {package}'s real published source code found no suspicious indicators. "
+        "Safe to proceed."
+    )

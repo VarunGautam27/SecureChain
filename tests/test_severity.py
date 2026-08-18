@@ -1,45 +1,51 @@
 import pytest
 
-from securechain.severity import label_severity
+from securechain.severity import (
+    UNVERIFIED,
+    label_severity,
+    label_static_scan_status,
+    label_unscanned_status,
+    tier_index,
+)
 
-# (cvss_score, anomaly_flagged) -> expected (base_severity, severity)
+# cvss_score -> expected severity (CVE-found path: strictly CVSS-based, no escalation)
 CASES = [
-    (None, False, "Safe", "Safe"),
-    (None, True, "Safe", "Low"),  # escalation cap: no CVE + anomaly -> Low, never higher
-    (2.0, False, "Low", "Low"),
-    (2.0, True, "Low", "Medium"),
-    (5.0, False, "Medium", "Medium"),
-    (5.0, True, "Medium", "High"),
-    (7.5, False, "High", "High"),
-    (7.5, True, "High", "Critical"),
-    (9.8, False, "Critical", "Critical"),
-    (9.8, True, "Critical", "Critical"),  # already at ceiling, cannot escalate further
+    (None, "Safe"),
+    (0.1, "Low"),
+    (2.0, "Low"),
+    (5.0, "Medium"),
+    (7.5, "High"),
+    (9.8, "Critical"),
 ]
 
 
-@pytest.mark.parametrize("cvss_score,anomaly_flagged,expected_base,expected_final", CASES)
-def test_severity_matrix(cvss_score, anomaly_flagged, expected_base, expected_final):
-    result = label_severity(cvss_score, anomaly_flagged)
-    assert result.base_severity == expected_base
-    assert result.severity == expected_final
+@pytest.mark.parametrize("cvss_score,expected", CASES)
+def test_severity_matrix(cvss_score, expected):
+    result = label_severity(cvss_score)
+    assert result.base_severity == expected
+    assert result.severity == expected
 
 
-def test_escalation_cap_never_jumps_two_tiers():
-    result = label_severity(None, True)
-    assert result.severity == "Low"
-    assert result.severity != "Medium"
-    assert result.severity != "High"
-    assert result.severity != "Critical"
+def test_label_unscanned_status_is_unverified():
+    assert label_unscanned_status() == UNVERIFIED
 
 
-def test_critical_with_no_anomaly_is_not_downgraded():
-    result = label_severity(9.9, False)
-    assert result.severity == "Critical"
-    assert result.escalated is False
+def test_label_static_scan_status_not_yet_run_is_unverified():
+    assert label_static_scan_status("not_run", None) == UNVERIFIED
+    assert label_static_scan_status("lookup_failed", None) == UNVERIFIED
 
 
-def test_escalated_flag_reflects_whether_a_tier_change_occurred():
-    escalated = label_severity(2.0, True)
-    not_escalated = label_severity(2.0, False)
-    assert escalated.escalated is True
-    assert not_escalated.escalated is False
+def test_label_static_scan_status_clean_is_safe():
+    assert label_static_scan_status("ok", None) == "Safe"
+
+
+def test_label_static_scan_status_confirmed_chain_is_critical():
+    assert label_static_scan_status("ok", "confirmed_chain") == "Critical"
+
+
+def test_label_static_scan_status_install_hook_is_high():
+    assert label_static_scan_status("ok", "install_hook") == "High"
+
+
+def test_tier_index_treats_unverified_same_as_low():
+    assert tier_index(UNVERIFIED) == tier_index("Low")

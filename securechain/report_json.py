@@ -6,7 +6,7 @@ Schema (documented in README.md "JSON Report Schema" section):
   "scan_date": "2026-07-09T00:00:00+00:00",
   "manifest_path": "demo/package.json",
   "scanned_by": "ayush",
-  "summary": {"total": 5, "critical": 1, "high": 0, "medium": 2, "low": 1, "safe": 1},
+  "summary": {"total": 5, "critical": 1, "high": 0, "medium": 2, "low": 1, "safe": 1, "unverified": 0},
   "dependencies": [
     {
       "package": "xml2js",
@@ -16,23 +16,28 @@ Schema (documented in README.md "JSON Report Schema" section):
                  "summary": "Prototype pollution allows an attacker to modify Object.prototype ..."},
       "exploit_intel": {"status": "ok", "epss_score": 0.049, "epss_percentile": 0.91,
                           "in_kev": false, "kev_date_added": null, "source": "cache"},
+      "scorecard": {"status": "ok", "score": 3.6, "checks": [...], "repo": "..."},
+      "static_scan": {"status": "not_run", "flagged": false, "indicators": [], "files_scanned": 0,
+                        "ml_risk_score": null, "ml_explanation": null},
       "behavioral": {"release_frequency_deviation": .., "maintainer_count": ..,
                       "version_jump_irregularity": .., "download_age_ratio": ..},
-      "risk_score": 0.93,
-      "anomaly_flagged": true,
-      "base_severity": "Critical",
+      "anomaly_flagged": false,
+      "anomaly_explanation": {"attributions": [...], "explanation_text": "..."},
       "severity": "Critical",
-      "escalated": false,
-      "recommendation": "...",
-      "shap": {
-        "classifier": {"attributions": [...], "base_value": .., "model_output": ..,
-                         "top_feature": "cvss_score", "explanation_text": "..."},
-        "anomaly": {"attributions": [...], "base_value": .., "model_output": ..,
-                      "top_feature": "maintainer_count", "explanation_text": "..."}
-      }
+      "recommendation": "..."
     }
   ]
 }
+
+Severity itself never comes from behavioral/anomaly data - a catalogued CVE's
+severity comes strictly from CVSS; an uncatalogued dependency's comes from
+Unverified/Safe/High/Critical based on the static scan (see severity.py).
+Behavioral/anomaly data is informational context only, computed for every
+dependency (both tracks), shown so a reviewer can prioritize which Unverified
+dependencies look most worth a manual static scan first - restoring the same
+publish-pattern signal validated against real historical incidents
+(event-stream, ua-parser-js) in this project's retrospective testing, without
+letting it silently determine severity on its own the way it used to.
 """
 
 from __future__ import annotations
@@ -40,7 +45,7 @@ from __future__ import annotations
 import getpass
 import json
 import os
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
@@ -49,9 +54,10 @@ from securechain.behavioral import BehavioralFeatures
 from securechain.exploit_intel import ExploitIntelResult
 from securechain.ml.explain import ExplanationResult
 from securechain.scorecard import ScorecardResult
+from securechain.static_scan import StaticScanResult
 from securechain.vuln_lookup import LookupResult
 
-SEVERITY_ORDER = ["critical", "high", "medium", "low", "safe"]
+SEVERITY_ORDER = ["critical", "high", "medium", "low", "safe", "unverified"]
 
 
 def detect_scanner_identity() -> str:
@@ -77,16 +83,14 @@ class DependencyRecord:
     is_direct: bool
     lookup_status: str
     cvss: dict
-    behavioral: dict
-    risk_score: float
-    anomaly_flagged: bool
-    base_severity: str
     severity: str
-    escalated: bool
     recommendation: str
-    shap: dict
     exploit_intel: dict
     scorecard: dict
+    static_scan: dict
+    behavioral: dict
+    anomaly_flagged: bool
+    anomaly_explanation: dict
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -96,17 +100,14 @@ def build_dependency_record(
     package: str,
     version: str,
     lookup_result: LookupResult,
-    behavioral: BehavioralFeatures,
-    risk_score: float,
-    anomaly_flagged: bool,
-    base_severity: str,
     severity: str,
-    escalated: bool,
     recommendation: str,
-    classifier_explanation: ExplanationResult,
-    anomaly_explanation: ExplanationResult,
     exploit_intel: ExploitIntelResult,
+    behavioral: BehavioralFeatures,
+    anomaly_flagged: bool,
+    anomaly_explanation: ExplanationResult,
     scorecard: Optional[ScorecardResult] = None,
+    static_scan: Optional[StaticScanResult] = None,
     ecosystem: str = "npm",
     is_direct: bool = True,
 ) -> DependencyRecord:
@@ -127,17 +128,12 @@ def build_dependency_record(
         },
         exploit_intel=exploit_intel.to_dict(),
         scorecard=(scorecard or ScorecardResult.not_available()).to_dict(),
+        static_scan=(static_scan or StaticScanResult.not_run()).to_dict(),
         behavioral=behavioral.to_dict(),
-        risk_score=risk_score,
         anomaly_flagged=anomaly_flagged,
-        base_severity=base_severity,
+        anomaly_explanation=anomaly_explanation.to_dict(),
         severity=severity,
-        escalated=escalated,
         recommendation=recommendation,
-        shap={
-            "classifier": classifier_explanation.to_dict(),
-            "anomaly": anomaly_explanation.to_dict(),
-        },
     )
 
 

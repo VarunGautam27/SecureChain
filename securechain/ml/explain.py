@@ -12,7 +12,7 @@ from dataclasses import dataclass
 import numpy as np
 import shap
 
-from securechain.ml.features import ANOMALY_FEATURE_NAMES, CLASSIFIER_FEATURE_NAMES
+from securechain.ml.features import ANOMALY_FEATURE_NAMES, CLASSIFIER_FEATURE_NAMES, STATIC_SCAN_FEATURE_NAMES
 
 
 @dataclass
@@ -80,6 +80,22 @@ _PHRASES = {
         "risk": "an unusual download to age ratio",
         "safe": "a typical download to age ratio for its age",
     },
+    "category_count": {
+        "risk": "multiple distinct suspicious code indicators present at once",
+        "safe": "few or no suspicious code indicators",
+    },
+    "has_install_hook": {
+        "risk": "an install-time script (preinstall/install/postinstall)",
+        "safe": "no install-time script",
+    },
+    "taint_chain_confirmed": {
+        "risk": "a confirmed data flow from a suspicious source into a dangerous sink",
+        "safe": "no confirmed data-flow chain",
+    },
+    "files_scanned": {
+        "risk": "an unusually large or small number of source files scanned",
+        "safe": "a typical number of source files for this kind of package",
+    },
 }
 
 
@@ -119,6 +135,29 @@ def explain_classifier(model, feature_vector: list[float]) -> ExplanationResult:
     attributions = [
         FeatureAttribution(feature=name, value=float(val), shap_value=float(sv))
         for name, val, sv in zip(CLASSIFIER_FEATURE_NAMES, feature_vector, values)
+    ]
+    model_output = base_value + float(np.sum(values))
+    top = max(attributions, key=lambda a: abs(a.shap_value))
+    predicted_risky = model_output >= 0.5
+    text = _build_explanation_text(attributions, flagged=predicted_risky)
+
+    return ExplanationResult(
+        attributions=attributions,
+        base_value=base_value,
+        model_output=model_output,
+        top_feature=top.feature,
+        explanation_text=text,
+    )
+
+
+def explain_static_classifier(model, feature_vector: list[float]) -> ExplanationResult:
+    explainer = shap.TreeExplainer(model)
+    raw_values = explainer.shap_values(np.array([feature_vector]))
+    values, base_value = _extract_positive_class_shap(raw_values, explainer.expected_value)
+
+    attributions = [
+        FeatureAttribution(feature=name, value=float(val), shap_value=float(sv))
+        for name, val, sv in zip(STATIC_SCAN_FEATURE_NAMES, feature_vector, values)
     ]
     model_output = base_value + float(np.sum(values))
     top = max(attributions, key=lambda a: abs(a.shap_value))

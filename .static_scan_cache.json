@@ -1,0 +1,42 @@
+{
+  "lodash@4.17.21": {
+    "severity": "Safe",
+    "static_scan": {
+      "status": "ok",
+      "flagged": false,
+      "flag_reason": null,
+      "indicators": [],
+      "files_scanned": 1048,
+      "ml_risk_score": 0.0,
+      "ml_explanation": {
+        "attributions": [
+          {
+            "feature": "category_count",
+            "value": 0.0,
+            "shap_value": -0.16484458762591986
+          },
+          {
+            "feature": "has_install_hook",
+            "value": 0.0,
+            "shap_value": -0.16145236955924003
+          },
+          {
+            "feature": "taint_chain_confirmed",
+            "value": 0.0,
+            "shap_value": -0.1370367387479467
+          },
+          {
+            "feature": "files_scanned",
+            "value": 1048.0,
+            "shap_value": -0.034511181089666144
+          }
+        ],
+        "base_value": 0.497844877022765,
+        "model_output": -7.771561172376096e-15,
+        "top_feature": "category_count",
+        "explanation_text": "Not flagged. Primary contributing factors were few or no suspicious code indicators and no install-time script."
+      }
+    },
+    "recommendation": "Static analysis of lodash's real published source code found no suspicious indicators. Safe to proceed."
+  }
+}

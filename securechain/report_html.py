@@ -62,10 +62,11 @@ SEVERITY_CLASS = {
     "Medium": "sev-medium",
     "Low": "sev-low",
     "Safe": "sev-safe",
+    "Unverified": "sev-unverified",
 }
 
-SEVERITY_ORDER = ["Critical", "High", "Medium", "Low", "Safe"]
-SEVERITY_SCALE_ORDER = ["Safe", "Low", "Medium", "High", "Critical"]
+SEVERITY_ORDER = ["Critical", "High", "Medium", "Low", "Unverified", "Safe"]
+SEVERITY_SCALE_ORDER = ["Safe", "Unverified", "Low", "Medium", "High", "Critical"]
 
 # A fixed, reserved traffic-light scale (green -> blue -> amber -> orange -> red).
 # Each fill's badge text color is whichever of white/dark clears >= 4.5:1 against
@@ -76,6 +77,7 @@ SEVERITY_GRADIENT = {
     "High": "#b85c00",
     "Medium": "#c99a1e",
     "Low": "#2c5f9e",
+    "Unverified": "#6b6b76",
     "Safe": "#227a3d",
 }
 
@@ -261,6 +263,7 @@ footer {{ margin-top: 2rem; font-size: 0.8rem; color: var(--text-secondary); }}
 .sev-high {{ background-color: #b85c00; color: #ffffff; }}
 .sev-medium {{ background-color: #c99a1e; color: #14161a; }}
 .sev-low {{ background-color: #2c5f9e; color: #ffffff; }}
+.sev-unverified {{ background-color: #6b6b76; color: #ffffff; }}
 .sev-safe {{ background-color: #227a3d; color: #ffffff; }}
 """
 
@@ -336,26 +339,32 @@ def _render_cvss_tab(dependency: dict) -> str:
 
 
 def _severity_reason_lines(dependency: dict) -> list[str]:
-    """Why this tier: CVSS base plus the escalation rule, in plain language."""
-    base = dependency["base_severity"]
-    final = dependency["severity"]
-    if dependency["escalated"]:
-        reason = (
-            f"Base severity is {base} from CVSS analysis. A behavioral anomaly was "
-            f"detected, escalating it by one tier to {final}."
-        )
-    elif dependency["anomaly_flagged"]:
-        reason = (
-            f"Base severity is {base} from CVSS analysis. A behavioral anomaly was also "
-            f"detected, but {final} was already at the top of the scale, so it could not "
-            f"escalate further."
-        )
-    else:
-        reason = (
-            f"Base severity is {base} from CVSS analysis and stayed at {final}, since no "
-            f"behavioral anomaly was detected."
-        )
-    return [reason]
+    """Why this tier: for a catalogued CVE, severity comes strictly from its
+    CVSS score (see the CVSS tab for the score itself). For a dependency
+    with no catalogued CVE, severity reflects whether a static source-code
+    scan has actually run yet - see the Static Analysis tab.
+    """
+    severity = dependency["severity"]
+    if dependency["lookup_status"] == "ok":
+        return [f"Severity is {severity}, based on this version's CVSS score. See the CVSS tab for details."]
+    if severity == "Unverified":
+        return [
+            "Unverified: no CVE has been catalogued for this version, but that does not confirm it is "
+            "safe. See the Static Analysis tab to run a real scan of its published source."
+        ]
+    if severity == "Safe":
+        return ["Safe: no CVE has been catalogued, and a static scan of its real published source found nothing suspicious."]
+    if severity == "Critical":
+        return [
+            "Critical: no CVE has been catalogued, but static analysis traced a confirmed data-flow "
+            "chain from a suspicious source into a dangerous sink in its real source code - concrete "
+            "evidence, not a keyword coincidence. See the Static Analysis tab for details."
+        ]
+    return [
+        "High: no CVE has been catalogued, but static analysis found a suspicious pattern inside an "
+        "install-time script, which runs automatically as soon as this package is installed. See the "
+        "Static Analysis tab for details."
+    ]
 
 
 def _exploit_summary_lines(dependency: dict) -> list[str]:
@@ -367,22 +376,10 @@ def _exploit_summary_lines(dependency: dict) -> list[str]:
     return [attack_summary] if attack_summary else []
 
 
-def _risk_score_lines(dependency: dict) -> list[str]:
-    """The Random Forest's own contextual score and its SHAP explanation."""
-    risk_score = dependency["risk_score"]
-    classifier_explanation = dependency.get("shap", {}).get("classifier", {}).get("explanation_text", "")
-    lines = [f"Contextual risk score {risk_score:.2f} from the Random Forest classifier."]
-    if classifier_explanation:
-        lines.append(classifier_explanation)
-    return lines
-
-
 def _render_severity_tab(dependency: dict) -> str:
-    """Three visually separated sections, same pattern as the CVSS and
-    Behavioral tabs: the tier decision itself, then, only when each exists,
-    a labeled subheading before what an attacker could actually do and
-    before the Random Forest's own score, rather than one undifferentiated
-    paragraph mixing three different kinds of information together.
+    """The tier decision itself, then, only when it exists, a labeled
+    subheading before what an attacker could actually do - mirroring the
+    same visually-separated pattern used in the CVSS tab.
     """
     content = _paragraphs(_severity_reason_lines(dependency))
 
@@ -390,29 +387,7 @@ def _render_severity_tab(dependency: dict) -> str:
     if exploit_lines:
         content += '<p class="tab-subheading">How This Could Be Exploited</p>'
         content += _paragraphs(exploit_lines)
-
-    content += '<p class="tab-subheading">Risk Score Explanation</p>'
-    content += _paragraphs(_risk_score_lines(dependency))
     return content
-
-
-def _behavioral_lines(dependency: dict) -> list[str]:
-    """The 4 raw features, the anomaly flag, and the SHAP explanation of what
-    made the Isolation Forest consider this normal or suspicious. Scorecard
-    is deliberately not mixed in here, see _scorecard_lines and
-    _render_behavioral_tab below, it's a separate data source describing the
-    project's own repository health, not this pinned release's behavior.
-    """
-    behavioral = dependency["behavioral"]
-    anomaly_explanation = dependency.get("shap", {}).get("anomaly", {}).get("explanation_text", "")
-    return [
-        f"Release frequency deviation {behavioral['release_frequency_deviation']:.2f}",
-        f"Maintainer count {behavioral['maintainer_count']}",
-        f"Version jump irregularity {behavioral['version_jump_irregularity']:.2f}",
-        f"Download to age ratio {behavioral['download_age_ratio']:.2f}",
-        "Anomaly detected" if dependency["anomaly_flagged"] else "No anomaly detected",
-        anomaly_explanation,
-    ]
 
 
 def _scorecard_lines(dependency: dict) -> list[str]:
@@ -438,18 +413,116 @@ def _scorecard_lines(dependency: dict) -> list[str]:
     return lines
 
 
-def _render_behavioral_tab(dependency: dict) -> str:
-    """Two visually separated sections, mirroring _render_cvss_tab: the
-    Isolation Forest's own behavioral analysis, then, only when Scorecard
-    data exists, a clearly labeled subheading before it, since the two
-    describe different things and reading them run together as one
-    undifferentiated paragraph makes that easy to miss.
-    """
-    content = _paragraphs(_behavioral_lines(dependency))
+def _render_scorecard_tab(dependency: dict) -> str:
     scorecard_lines = _scorecard_lines(dependency)
-    if scorecard_lines:
-        content += '<p class="tab-subheading">OpenSSF Scorecard</p>'
-        content += _paragraphs(scorecard_lines)
+    if not scorecard_lines:
+        return _paragraphs(["No OpenSSF Scorecard data available for this dependency's repository."])
+    return _paragraphs(scorecard_lines)
+
+
+def _behavioral_lines(dependency: dict) -> list[str]:
+    """The 4 raw registry-metadata features, the anomaly flag, and the SHAP
+    explanation of what made the Isolation Forest consider this normal or
+    suspicious. Informational only - this never determines severity by
+    itself (that caused real confusion earlier: a dependency shown "Safe"
+    while also carrying a scary anomaly badge). Its role is triage: helping
+    a reviewer decide which Unverified dependencies deserve a static scan
+    first, restoring the same publish-pattern signal validated against real
+    historical incidents (event-stream, ua-parser-js) without letting it
+    silently set severity again.
+    """
+    behavioral = dependency.get("behavioral") or {}
+    if not behavioral:
+        return ["No behavioral data available for this dependency."]
+    anomaly_explanation = dependency.get("anomaly_explanation", {}).get("explanation_text", "")
+    lines = [
+        f"Release frequency deviation {behavioral['release_frequency_deviation']:.2f}",
+        f"Maintainer count {behavioral['maintainer_count']}",
+        f"Version jump irregularity {behavioral['version_jump_irregularity']:.2f}",
+        f"Download to age ratio {behavioral['download_age_ratio']:.2f}",
+        "Anomaly detected - publishing pattern looks unusual" if dependency.get("anomaly_flagged")
+        else "No anomaly detected - publishing pattern looks typical",
+    ]
+    if anomaly_explanation:
+        lines.append(anomaly_explanation)
+    if dependency.get("anomaly_flagged") and dependency.get("severity") == "Unverified":
+        lines.append(
+            "This dependency has no catalogued CVE and its publishing pattern looks unusual - "
+            "prioritize running a static scan on it over other Unverified dependencies."
+        )
+    return lines
+
+
+def _render_behavioral_tab(dependency: dict) -> str:
+    return _paragraphs(_behavioral_lines(dependency))
+
+
+def _static_scan_reason_lines(dependency: dict) -> list[str]:
+    """This only ever runs for a dependency with no catalogued CVE at all, and
+    only outside offline/cached-demo mode, since it downloads and reads the
+    package's real published source text. The raw indicators (dynamic code
+    execution, process spawning, raw network access, encoded payloads,
+    hardcoded IPs, install-time hooks, a confirmed taint chain for Python)
+    are shown as context; whether the dependency is actually flagged is
+    decided by the trained static-scan classifier below, not by a hard rule
+    on these indicators directly, since a single matched keyword or even
+    several together proves nothing on its own in isolation.
+    """
+    static_scan = dependency.get("static_scan") or {}
+    status = static_scan.get("status")
+
+    if status == "not_run":
+        return [
+            "Not run for this dependency. This scan only runs when no CVE was found for "
+            "this version at all, and only outside cached-demo mode, since it downloads "
+            "the package's real published source."
+        ]
+    if status == "lookup_failed":
+        reason = (static_scan.get("indicators") or ["unknown reason"])[0]
+        return [f"Could not complete: {reason}"]
+
+    files_scanned = static_scan.get("files_scanned", 0)
+    indicators = static_scan.get("indicators") or []
+    if not indicators:
+        return [
+            f"Scanned {files_scanned} source file(s) from the package's real published "
+            "release. No indicators from the checked list were found."
+        ]
+
+    lines = [
+        f"Scanned {files_scanned} source file(s) from the package's real published release.",
+        "Indicators present: " + "; ".join(indicators) + ".",
+    ]
+    if not static_scan.get("flagged"):
+        lines.append(
+            "Not flagged even so - this is not a determination of malicious intent, it "
+            "narrows down where a human reviewer might look, nothing more."
+        )
+    return lines
+
+
+def _static_scan_risk_lines(dependency: dict) -> list[str]:
+    """The static-scan classifier's own score and SHAP explanation - trained
+    on a documented synthetic dataset (see ml/training_data.py's
+    generate_static_scan_dataset), same methodology as the rest of this
+    tool's models, not on real confirmed malware samples.
+    """
+    static_scan = dependency.get("static_scan") or {}
+    if static_scan.get("status") != "ok" or static_scan.get("ml_risk_score") is None:
+        return []
+    lines = [f"Static-scan risk score {static_scan['ml_risk_score']:.2f} from the trained classifier."]
+    explanation = (static_scan.get("ml_explanation") or {}).get("explanation_text", "")
+    if explanation:
+        lines.append(explanation)
+    return lines
+
+
+def _render_static_scan_tab(dependency: dict) -> str:
+    content = _paragraphs(_static_scan_reason_lines(dependency))
+    risk_lines = _static_scan_risk_lines(dependency)
+    if risk_lines:
+        content += '<p class="tab-subheading">Static Analysis Risk Score</p>'
+        content += _paragraphs(risk_lines)
     return content
 
 
@@ -481,7 +554,13 @@ def _render_card(dependency: dict, index: int, ignore_store: dict) -> str:
         ("cvss", "CVSS", _render_cvss_tab(dependency)),
         ("severity", "Severity", _render_severity_tab(dependency)),
         ("behavioral", "Behavioral", _render_behavioral_tab(dependency)),
+        ("scorecard", "Scorecard", _render_scorecard_tab(dependency)),
     ]
+    # Only meaningful for a dependency with no catalogued CVE - for a known
+    # vulnerability this tab would only ever say "not run", which is clutter,
+    # not information.
+    if dependency["lookup_status"] != "ok":
+        tabs.append(("static_scan", "Static Analysis", _render_static_scan_tab(dependency)))
 
     tab_buttons = "".join(
         f'<button type="button" class="tab-btn{" active" if i == 0 else ""}" '
@@ -509,6 +588,22 @@ def _render_card(dependency: dict, index: int, ignore_store: dict) -> str:
             'Vulnerabilities catalog: confirmed active exploitation">KEV</span>'
         )
 
+    static_scan = dependency.get("static_scan") or {}
+    static_scan_tag = ""
+    if static_scan.get("status") == "ok":
+        static_scan_tag = (
+            '<span class="accepted-tag">STATIC SCAN: REVIEW</span>'
+            if static_scan.get("flagged")
+            else '<span class="accepted-tag">STATIC SCAN: CLEAN</span>'
+        )
+
+    priority_tag = ""
+    if dependency.get("anomaly_flagged") and severity == "Unverified":
+        priority_tag = (
+            '<span class="accepted-tag" title="Publishing pattern looks unusual - see the '
+            'Behavioral tab">PRIORITIZE SCAN</span>'
+        )
+
     return f"""
     <section class="dep-card" data-package="{_esc(dependency['package'])}" data-severity="{_esc(severity)}">
       <div class="dep-header">
@@ -521,6 +616,8 @@ def _render_card(dependency: dict, index: int, ignore_store: dict) -> str:
         <div class="dep-badges">
           {accepted_tag}
           {kev_tag}
+          {static_scan_tag}
+          {priority_tag}
           <span class="severity-badge {sev_class}">{_esc(severity.upper())}</span>
         </div>
       </div>

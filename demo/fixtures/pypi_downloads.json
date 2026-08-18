@@ -8,5 +8,7 @@
   "certifi": 407695461,
   "idna": 386771389,
   "charset-normalizer": 373396881,
-  "six": 256372227
+  "six": 256372227,
+  "iniconfig": 225762432,
+  "dlib": 45364
 }

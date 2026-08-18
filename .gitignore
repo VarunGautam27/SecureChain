@@ -11,3 +11,5 @@ result/
 .venv/
 venv/
 .claude/
+securechain/js_ast/node_modules/
+securechain/js_ast/package-lock.json

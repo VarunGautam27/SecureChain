@@ -62,7 +62,8 @@ def _cmd_scan(args: argparse.Namespace) -> int:
     print(f"Scanned {summary['total']} dependencies from {args.manifest_path}")
     print(
         f"Critical={summary['critical']} High={summary['high']} "
-        f"Medium={summary['medium']} Low={summary['low']} Safe={summary['safe']}"
+        f"Medium={summary['medium']} Low={summary['low']} "
+        f"Unverified={summary['unverified']} Safe={summary['safe']}"
     )
     print(f"JSON report written to {output_path}")
     print(f"HTML report written to {html_path}")

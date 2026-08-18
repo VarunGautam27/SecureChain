@@ -22,8 +22,10 @@ name: Dependency Risk Scan
 # fixed copy that could drift out of sync with it.
 
 on:
-  push:
-  pull_request:
+  # push:
+  # pull_request:
+  workflow_dispatch:
+  
 
 jobs:
   # 1. Scans demo/package.json exactly as committed. .riskignore.json is

@@ -17,10 +17,24 @@ it never replaces CI as the actual enforcement point.
 
 ## How it actually works, end to end
 
-1. **A developer pushes a commit** (or opens/updates a pull request) to a repo
-   that has `.github/workflows/dependency-risk-scan.yml` in it. GitHub sees that
-   file and automatically starts the workflow - nobody has to run anything by
-   hand, and nothing needs to happen locally first.
+1. **The workflow runs against `.github/workflows/dependency-risk-scan.yml`.**
+   As committed in this repo, the trigger is set to `workflow_dispatch` (manual
+   only, via the "Run workflow" button on the Actions tab), rather than
+   `push`/`pull_request`, specifically so that `scan-demo-manifest` (see step 3
+   below - it is *designed* to fail, demonstrating the gate blocking a build)
+   does not show as a red status check on every future commit to this repo. In
+   a real project, this is normally set to trigger automatically instead:
+   ```yaml
+   on:
+     push:
+     pull_request:
+   ```
+   Swapping the `on:` block back to that restores automatic triggering - a
+   developer pushes a commit (or opens/updates a pull request), GitHub sees the
+   workflow file and starts it, nobody has to run anything by hand or trigger
+   it locally first. This repo keeps it manual only to avoid a permanently red
+   check on a portfolio/demo repository, not because automatic triggering
+   doesn't work; it does, and is the intended real-world configuration.
 2. **`securechain scan` runs inside that GitHub Actions job**, reads
    `package.json`, and for every dependency: looks up its CVE/advisory record,
    checks real-world exploit intelligence (EPSS score and CISA KEV status) when
@@ -77,9 +91,12 @@ accepting it (or removing the dependency entirely) does. A CVE-based finding,
 by contrast, genuinely goes away once you upgrade past the patched version.
 
 **What this does *not* react to**: `securechain` only ever runs when GitHub
-tells it to, via the `on: push` / `on: pull_request` triggers in the workflow
-file - both are things that happen *on GitHub's servers* (a commit landing on
-a branch, or a pull request being opened/updated). Running `git pull` (or
+tells it to, via whichever `on:` trigger is configured in the workflow file -
+`workflow_dispatch` (manual, as currently committed here) or `push` /
+`pull_request` (automatic, the normal real-world setting - see the note in
+step 1 above on switching between them). Both `push` and `pull_request` are
+things that happen *on GitHub's servers* (a commit landing on a branch, or a
+pull request being opened/updated). Running `git pull` (or
 `git fetch`, `git clone`) is a purely local operation on your own machine that
 downloads commits *from* GitHub *to* you - GitHub's servers have no visibility
 into it at all, so there is no way for any GitHub Actions workflow, from this

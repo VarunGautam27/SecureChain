@@ -22,9 +22,9 @@ name: Dependency Risk Scan
 # fixed copy that could drift out of sync with it.
 
 on:
-  # push:
-  # pull_request:
-  workflow_dispatch:
+  push:
+  pull_request:
+  # workflow_dispatch:
   
 
 jobs:
